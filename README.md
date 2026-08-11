@@ -180,6 +180,54 @@ The controller dispatches:
   driver.js instance is created and the `once` flag is not persisted, so a tour that never
   played can still run later.
 
+### Cycle de vie
+
+driver.js only accepts callbacks, which PHP and Twig cannot serialize. Every driver.js hook
+is therefore bridged to a Stimulus event, so a tour declared server-side stays observable
+from your own JavaScript.
+
+| Event                          | driver.js hook       | Cancelable | Default action        |
+|--------------------------------|----------------------|------------|-----------------------|
+| `ux-driver:highlight-started`  | `onHighlightStarted` | no         | —                     |
+| `ux-driver:highlighted`        | `onHighlighted`      | no         | —                     |
+| `ux-driver:deselected`         | `onDeselected`       | no         | —                     |
+| `ux-driver:destroyed`          | `onDestroyed`        | no         | —                     |
+| `ux-driver:next`               | `onNextClick`        | yes        | `moveNext()`          |
+| `ux-driver:previous`           | `onPrevClick`        | yes        | `movePrevious()`      |
+| `ux-driver:close`              | `onCloseClick`       | yes        | `destroy()`           |
+| `ux-driver:done`               | `onDoneClick`        | yes        | `destroy()`           |
+| `ux-driver:destroy-started`    | `onDestroyStarted`   | yes        | `destroy()`           |
+
+Every detail carries the same shape: `{tourId, index, step, element, driver}`.
+
+Observing changes nothing — the default behaviour still runs. Call `preventDefault()` on a
+cancelable event to take over: the tour then stays where it is until you drive it yourself.
+
+```js
+document.addEventListener('ux-driver:next', (event) => {
+    if (!formIsValid()) {
+        event.preventDefault(); // hold the tour on the current step
+    }
+});
+```
+
+### Actions Stimulus
+
+Drive a running tour from your markup. All of them no-op when no tour is running.
+
+```twig
+<button data-action="pentiminax--ux-driver--tour#next">Suivant</button>
+<button data-action="pentiminax--ux-driver--tour#previous">Précédent</button>
+<button data-action="pentiminax--ux-driver--tour#refresh">Repositionner</button>
+<button data-action="pentiminax--ux-driver--tour#destroy">Fermer</button>
+
+<button data-action="pentiminax--ux-driver--tour#moveTo"
+        data-pentiminax--ux-driver--tour-index-param="2">Aller à l'étape 3</button>
+
+<button data-action="pentiminax--ux-driver--tour#start"
+        data-pentiminax--ux-driver--tour-index-param="1">Reprendre à l'étape 2</button>
+```
+
 ## Development
 
 ```bash

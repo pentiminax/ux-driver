@@ -2,15 +2,20 @@ import {Application, type Controller} from '@hotwired/stimulus';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const mocks = vi.hoisted(() => {
-    const drive = vi.fn();
-    const highlight = vi.fn();
-    const destroy = vi.fn();
+    const instance = {
+        drive: vi.fn(),
+        highlight: vi.fn(),
+        destroy: vi.fn(),
+        moveNext: vi.fn(),
+        movePrevious: vi.fn(),
+        moveTo: vi.fn(),
+        refresh: vi.fn(),
+    };
 
     return {
-        drive,
-        highlight,
-        destroy,
-        driver: vi.fn(() => ({drive, highlight, destroy})),
+        ...instance,
+        instance,
+        driver: vi.fn(() => instance),
     };
 });
 
@@ -53,13 +58,29 @@ const STEPS = `
          data-step-description="Top bar" data-step-side="bottom" data-step-align="start"></div>
 `;
 
+type Hook = (element: Element | undefined, step: object, opts: object) => void;
+
+/** Invokes a driver.js hook the controller registered, as driver.js itself would. */
+function invokeHook(name: string, index = 0): void {
+    const hook = (mocks.driver.mock.calls[0]![0] as Record<string, Hook>)[name]!;
+
+    hook(document.body, {popover: {title: 'Header'}}, {
+        config: {},
+        state: {},
+        driver: mocks.instance,
+        index,
+    });
+}
+
+function actionEvent(params: Record<string, unknown>): Event {
+    return Object.assign(new Event('click'), {params});
+}
+
 describe('tour controller', () => {
     beforeEach(() => {
         localStorage.clear();
         mocks.driver.mockClear();
-        mocks.drive.mockClear();
-        mocks.highlight.mockClear();
-        mocks.destroy.mockClear();
+        Object.values(mocks.instance).forEach((mock) => mock.mockClear());
     });
 
     afterEach(() => {
@@ -236,6 +257,147 @@ describe('tour controller', () => {
         expect(mocks.drive).toHaveBeenCalledTimes(1);
 
         vi.restoreAllMocks();
+    });
+
+    it.each([
+        ['onHighlightStarted', 'ux-driver:highlight-started'],
+        ['onHighlighted', 'ux-driver:highlighted'],
+        ['onDeselected', 'ux-driver:deselected'],
+        ['onDestroyed', 'ux-driver:destroyed'],
+    ])('bridges %s to %s', async (hook, eventName) => {
+        const element = await mount(tour());
+        const listener = vi.fn();
+
+        element.addEventListener(eventName, listener);
+        (controllerFor(element) as unknown as {start(): void}).start();
+
+        invokeHook(hook, 1);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect((listener.mock.calls[0]![0] as CustomEvent).detail).toMatchObject({
+            tourId: 'onboarding',
+            index: 1,
+            element: document.body,
+            driver: mocks.instance,
+        });
+    });
+
+    it.each([
+        ['onNextClick', 'ux-driver:next', 'moveNext'],
+        ['onPrevClick', 'ux-driver:previous', 'movePrevious'],
+        ['onCloseClick', 'ux-driver:close', 'destroy'],
+        ['onDoneClick', 'ux-driver:done', 'destroy'],
+        // driver.js aborts its own teardown as soon as onDestroyStarted is supplied: without
+        // this explicit destroy() the overlay could never be closed again.
+        ['onDestroyStarted', 'ux-driver:destroy-started', 'destroy'],
+    ] as const)('keeps the default behaviour of %s while emitting %s', async (hook, eventName, method) => {
+        const element = await mount(tour());
+        const listener = vi.fn();
+
+        element.addEventListener(eventName, listener);
+        (controllerFor(element) as unknown as {start(): void}).start();
+
+        invokeHook(hook);
+
+        expect(listener).toHaveBeenCalledTimes(1);
+        expect((listener.mock.calls[0]![0] as CustomEvent).cancelable).toBe(true);
+        expect(mocks.instance[method]).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        ['onNextClick', 'ux-driver:next', 'moveNext'],
+        ['onPrevClick', 'ux-driver:previous', 'movePrevious'],
+        ['onCloseClick', 'ux-driver:close', 'destroy'],
+        ['onDoneClick', 'ux-driver:done', 'destroy'],
+        ['onDestroyStarted', 'ux-driver:destroy-started', 'destroy'],
+    ] as const)('suppresses %s when a listener calls preventDefault', async (hook, eventName, method) => {
+        const element = await mount(tour());
+
+        element.addEventListener(eventName, (event) => event.preventDefault());
+        (controllerFor(element) as unknown as {start(): void}).start();
+
+        invokeHook(hook);
+
+        expect(mocks.instance[method]).not.toHaveBeenCalled();
+    });
+
+    it('drives from the index passed as an action param', async () => {
+        const element = await mount(tour());
+
+        (controllerFor(element) as unknown as {start(event: Event): void}).start(
+            actionEvent({index: 1}),
+        );
+
+        expect(mocks.drive).toHaveBeenCalledWith(1);
+    });
+
+    it('drives from the first step when no index param is given', async () => {
+        const element = await mount(tour());
+
+        (controllerFor(element) as unknown as {start(event: Event): void}).start(actionEvent({}));
+
+        expect(mocks.drive).toHaveBeenCalledWith(undefined);
+    });
+
+    it('exposes navigation actions that delegate to the running instance', async () => {
+        const element = await mount(tour());
+        const controller = controllerFor(element) as unknown as {
+            start(): void;
+            next(): void;
+            previous(): void;
+            refresh(): void;
+            moveTo(event: Event): void;
+            destroy(): void;
+        };
+
+        controller.start();
+        controller.next();
+        controller.previous();
+        controller.refresh();
+        controller.moveTo(actionEvent({index: 2}));
+        controller.destroy();
+
+        expect(mocks.moveNext).toHaveBeenCalledTimes(1);
+        expect(mocks.movePrevious).toHaveBeenCalledTimes(1);
+        expect(mocks.refresh).toHaveBeenCalledTimes(1);
+        expect(mocks.moveTo).toHaveBeenCalledWith(2);
+        expect(mocks.destroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores navigation actions when no tour is running', async () => {
+        const element = await mount(tour());
+        const controller = controllerFor(element) as unknown as {
+            next(): void;
+            previous(): void;
+            refresh(): void;
+            moveTo(event: Event): void;
+            destroy(): void;
+        };
+
+        controller.next();
+        controller.previous();
+        controller.refresh();
+        controller.moveTo(actionEvent({index: 2}));
+        controller.destroy();
+
+        expect(mocks.moveNext).not.toHaveBeenCalled();
+        expect(mocks.movePrevious).not.toHaveBeenCalled();
+        expect(mocks.refresh).not.toHaveBeenCalled();
+        expect(mocks.moveTo).not.toHaveBeenCalled();
+        expect(mocks.destroy).not.toHaveBeenCalled();
+    });
+
+    it('ignores moveTo without a usable index param', async () => {
+        const element = await mount(tour());
+        const controller = controllerFor(element) as unknown as {
+            start(): void;
+            moveTo(event: Event): void;
+        };
+
+        controller.start();
+        controller.moveTo(actionEvent({}));
+
+        expect(mocks.moveTo).not.toHaveBeenCalled();
     });
 
     it('stays idempotent when disconnect runs twice', async () => {
