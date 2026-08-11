@@ -64,5 +64,6 @@ test('built docs match the GitHub Pages contract', async () => {
   assert.match(css, /\.driver-hint/)
   assert.equal(existsSync(new URL('getting-started/introduction/index.html', dist)), false)
   assert.doesNotMatch(output, /__VITE_PRELOAD__/)
+  assert.match(output, /location\.origin/)
   assert.doesNotMatch(output, /ux-datatables|ux-sweet-alert/)
 })

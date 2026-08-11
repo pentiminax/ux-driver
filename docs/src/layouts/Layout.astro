@@ -123,7 +123,8 @@ const repoUrl = 'https://github.com/pentiminax/ux-driver'
           if (results) results.textContent = ''
           return
         }
-        pagefind ||= await importPagefind(`${root.dataset.baseUrl}pagefind/pagefind.js`)
+        const pagefindUrl = new URL(`${root.dataset.baseUrl}pagefind/pagefind.js`, window.location.origin)
+        pagefind ||= await importPagefind(pagefindUrl.href)
         const search = await pagefind.search(input.value)
         const fragments = await Promise.all(search.results.slice(0, 6).map((result: any) => result.data()))
         results.textContent = ''
