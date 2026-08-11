@@ -1,0 +1,9 @@
+---
+interface Props {
+  tone?: 'guide' | 'spotlight' | 'symfony'
+}
+
+const { tone = 'guide' } = Astro.props
+---
+
+<span class={`badge badge-${tone}`}><slot /></span>

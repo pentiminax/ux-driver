@@ -1,6 +1,13 @@
 ---
 import { getCollection, render } from 'astro:content'
+import Aside from '../components/Aside.astro'
+import Badge from '../components/Badge.astro'
+import Steps from '../components/Steps.astro'
+import TabItem from '../components/TabItem.astro'
+import Table from '../components/Table.astro'
+import Tabs from '../components/Tabs.astro'
 import Layout from '../layouts/Layout.astro'
+import { docsNav, withBase } from '../nav'
 
 export async function getStaticPaths() {
   const entries = await getCollection('docs')
@@ -12,12 +19,53 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props
-const { Content } = await render(entry)
+const { Content, headings } = await render(entry)
+const currentIndex = docsNav.findIndex((item) => item.slug === entry.id)
+const previous = docsNav[currentIndex - 1]
+const next = docsNav[currentIndex + 1]
+const editUrl = `https://github.com/pentiminax/ux-driver/edit/main/docs/src/content/docs/${entry.id}.mdx`
 ---
 
 <Layout title={`${entry.data.title} | UX Driver`} description={entry.data.description}>
-  <a class="nav-link" href={import.meta.env.BASE_URL}>UX Driver</a>
-  <article>
-    <Content />
-  </article>
+  <div class="doc-shell">
+    <details class="mobile-docs-nav">
+      <summary>Docs navigation</summary>
+      <nav aria-label="Documentation navigation">
+        {docsNav.map((item) => (
+          <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
+            {item.title}
+          </a>
+        ))}
+      </nav>
+    </details>
+
+    <aside class="doc-sidebar">
+      <nav aria-label="Documentation navigation">
+        <p>{docsNav[0]?.section}</p>
+        {docsNav.map((item) => (
+          <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
+            {item.title}
+          </a>
+        ))}
+      </nav>
+    </aside>
+
+    <article class="doc-article" data-pagefind-body>
+      <a class="edit-link" href={editUrl}>Edit on GitHub</a>
+      <Content components={{ Aside, Badge, Steps, TabItem, Table, Tabs }} />
+      <nav class="pager" aria-label="Previous and next pages">
+        {previous && <a href={withBase(`${previous.slug}/`)}>Previous: {previous.title}</a>}
+        {next && <a href={withBase(`${next.slug}/`)}>Next: {next.title}</a>}
+      </nav>
+    </article>
+
+    <aside class="doc-toc">
+      <nav aria-label="Table of contents">
+        <p>On this page</p>
+        {headings.filter((heading) => heading.depth > 1 && heading.depth < 4).map((heading) => (
+          <a href={`#${heading.slug}`}>{heading.text}</a>
+        ))}
+      </nav>
+    </aside>
+  </div>
 </Layout>

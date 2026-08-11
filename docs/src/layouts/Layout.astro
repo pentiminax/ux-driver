@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css'
+import { withBase } from '../nav'
 
 interface Props {
   title: string
@@ -8,20 +9,134 @@ interface Props {
 
 const { title, description } = Astro.props
 const canonicalPath = Astro.url.pathname
+const homeUrl = withBase()
+const introUrl = withBase('getting-started/introduction/')
+const repoUrl = 'https://github.com/pentiminax/ux-driver'
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-base-url={import.meta.env.BASE_URL}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <link rel="canonical" href={new URL(canonicalPath, Astro.site)} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>{title}</title>
+    <script is:inline>
+      try {
+        const storedTheme = localStorage.getItem('theme')
+        const systemDark = matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.dataset.theme = storedTheme || (systemDark ? 'dark' : 'light')
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
   </head>
   <body>
-    <main class="mx-auto max-w-4xl px-6 py-12">
+    <header class="site-header">
+      <a class="brand" href={homeUrl} aria-label="UX Driver home">
+        <span class="brand-mark"></span>
+        <span>UX Driver</span>
+      </a>
+      <nav class="top-nav" aria-label="Primary navigation">
+        <a href={introUrl}>Docs</a>
+        <a href={`${introUrl}#installation-placeholder`}>Install</a>
+      </nav>
+      <button class="search-trigger" type="button" data-search-trigger aria-label="Open search">
+        Search <kbd>⌘K</kbd>
+      </button>
+      <button class="theme-toggle" type="button" aria-label="Toggle theme" data-theme-toggle>◐</button>
+      <a class="github-link" href={repoUrl}>GitHub</a>
+    </header>
+
+    <dialog class="search-dialog" data-search-dialog aria-label="Search documentation">
+      <form method="dialog">
+        <button type="submit" aria-label="Close search">×</button>
+      </form>
+      <label for="site-search">Search docs</label>
+      <input id="site-search" type="search" data-pagefind-search placeholder="Tour, highlight, hints" />
+      <div class="search-results" data-search-results aria-live="polite"></div>
+    </dialog>
+
+    <main>
       <slot />
     </main>
+
+    <footer class="site-footer">
+      <a href="https://www.npmjs.com/package/@pentiminax/ux-driver">Package</a>
+      <a href={repoUrl}>GitHub</a>
+      <a href={`${repoUrl}/blob/main/LICENSE`}>License</a>
+    </footer>
+
+    <script>
+      const root = document.documentElement
+      const themeToggle = document.querySelector('[data-theme-toggle]')
+      themeToggle?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
+        root.dataset.theme = next
+        localStorage.setItem('theme', next)
+      })
+
+      document.querySelectorAll('pre').forEach((pre) => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'copy-code'
+        button.textContent = 'Copy'
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(pre.querySelector('code')?.textContent || pre.textContent || '')
+          button.textContent = 'Copied'
+          setTimeout(() => {
+            button.textContent = 'Copy'
+          }, 1200)
+        })
+        pre.append(button)
+      })
+
+      const dialog = document.querySelector('[data-search-dialog]') as HTMLDialogElement | null
+      const trigger = document.querySelector('[data-search-trigger]')
+      const input = document.querySelector('[data-pagefind-search]') as HTMLInputElement | null
+      const results = document.querySelector('[data-search-results]')
+      let pagefind: any
+
+      async function openSearch() {
+        dialog?.showModal()
+        input?.focus()
+      }
+
+      trigger?.addEventListener('click', openSearch)
+      document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault()
+          openSearch()
+        }
+      })
+
+      input?.addEventListener('input', async () => {
+        if (!results || !input.value.trim()) {
+          if (results) results.textContent = ''
+          return
+        }
+        pagefind ||= await import(`${root.dataset.baseUrl}pagefind/pagefind.js`)
+        const search = await pagefind.search(input.value)
+        const fragments = await Promise.all(search.results.slice(0, 6).map((result: any) => result.data()))
+        results.textContent = ''
+        for (const fragment of fragments) {
+          const link = document.createElement('a')
+          link.href = fragment.url
+          link.textContent = fragment.meta.title || fragment.url
+          const excerpt = document.createElement('p')
+          excerpt.textContent = fragment.excerpt.replace(/<[^>]+>/g, '')
+          const item = document.createElement('div')
+          item.append(link, excerpt)
+          results.append(item)
+        }
+      })
+    </script>
   </body>
 </html>

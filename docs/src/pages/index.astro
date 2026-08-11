@@ -1,14 +1,139 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import 'driver.js/dist/driver.css'
 
 const introductionUrl = `${import.meta.env.BASE_URL}getting-started/introduction/`
 ---
 
 <Layout title="UX Driver" description="Documentation for the UX Driver Symfony UX package.">
-  <section class="hero">
-    <p class="eyebrow">Symfony UX package</p>
-    <h1>UX Driver</h1>
-    <p>Documentation foundation for building guided product tours with Driver.js.</p>
-    <a class="button" href={introductionUrl}>Read the docs</a>
+  <section class="home-hero">
+    <div class="home-copy">
+      <p class="eyebrow">Symfony UX package</p>
+      <h1>UX Driver</h1>
+      <p>Symfony UX product tours, highlights, and contextual hints without handwritten JavaScript.</p>
+      <div class="hero-actions">
+        <a class="button" href={introductionUrl}>Read docs</a>
+        <a class="button button-secondary" href={`${introductionUrl}#installation-placeholder`}>Get started</a>
+      </div>
+      <pre><code>composer require pentiminax/ux-driver</code></pre>
+    </div>
+
+    <div class="admin-demo" aria-label="Interactive Symfony admin tour demo">
+      <div class="demo-toolbar">
+        <button type="button" data-demo-mode="tour">Start tour</button>
+        <button type="button" data-demo-mode="highlight">Highlight</button>
+        <button type="button" data-demo-mode="hints">Show hints</button>
+      </div>
+      <div class="admin-scene">
+        <div class="admin-rail" data-demo-target="nav">
+          <strong>Admin</strong>
+          <span>Orders</span>
+          <span>Customers</span>
+          <span>Catalog</span>
+        </div>
+        <div class="admin-main">
+          <div class="admin-header" data-demo-target="filters">
+            <span>Orders</span>
+            <button type="button">Today</button>
+            <button type="button">Export</button>
+          </div>
+          <div class="admin-grid" data-demo-target="table">
+            <div><strong>#1048</strong><span>Paid</span><span>€128.00</span></div>
+            <div><strong>#1049</strong><span>Review</span><span>€64.50</span></div>
+            <div><strong>#1050</strong><span>Shipped</span><span>€312.20</span></div>
+          </div>
+          <div class="admin-panel" data-demo-target="insight">
+            <strong>Contextual hint</strong>
+            <p>Point new operators to the exact control they need.</p>
+          </div>
+        </div>
+      </div>
+      <noscript>The interactive demo needs JavaScript, but UX Driver still renders regular Symfony and Twig content first.</noscript>
+    </div>
   </section>
+
+  <section class="home-details" aria-label="UX Driver modes">
+    <article>
+      <h2>Tour</h2>
+      <p>Sequence onboarding steps through Twig attributes while Driver.js handles focus and popovers.</p>
+    </article>
+    <article>
+      <h2>Highlight</h2>
+      <p>Draw attention to one Symfony admin action without building custom overlay scripts.</p>
+    </article>
+    <article>
+      <h2>Hints</h2>
+      <p>Attach lightweight beacons to controls that need contextual help.</p>
+    </article>
+  </section>
+
+  <section class="twig-first">
+    <h2>Twig-first setup</h2>
+    <pre><code>{`<button {{ ux_driver_target('orders-filter') }}>
+  Filter orders
+</button>
+
+{{ ux_driver_tour('admin-orders') }}`}</code></pre>
+  </section>
+
+  <script>
+    import { driver } from 'driver.js'
+    import { hints } from 'driver.js/hints'
+
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const buttons = document.querySelectorAll('[data-demo-mode]')
+    let tour = driver()
+    let hintLayer = hints()
+
+    function resetDemo() {
+      tour.destroy()
+      hintLayer.hide()
+      tour = driver({
+        animate: !reducedMotion,
+        showProgress: true,
+      })
+      hintLayer = hints()
+    }
+
+    const steps = [
+      {
+        element: '[data-demo-target="nav"]',
+        popover: { title: 'Start with the section', description: 'Tours can orient users inside a Symfony admin surface.' },
+      },
+      {
+        element: '[data-demo-target="filters"]',
+        popover: { title: 'Explain the controls', description: 'Point at real filters, actions, and status controls.' },
+      },
+      {
+        element: '[data-demo-target="insight"]',
+        popover: { title: 'Leave context behind', description: 'Hints keep help available after onboarding.' },
+      },
+    ]
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        resetDemo()
+        const mode = button.getAttribute('data-demo-mode')
+        if (mode === 'tour') {
+          tour.setSteps(steps)
+          tour.drive()
+        }
+        if (mode === 'highlight') {
+          tour.highlight({
+            element: '[data-demo-target="filters"]',
+            popover: { title: 'Fast highlight', description: 'Use this for one-off feature announcements.' },
+          })
+        }
+        if (mode === 'hints') {
+          hintLayer = hints({
+            hints: [
+              { element: '[data-demo-target="filters"]', popover: { title: 'Filter shortcuts', description: 'Save common views for support teams.' } },
+              { element: '[data-demo-target="insight"]', popover: { title: 'Contextual hints', description: 'Keep help close to the workflow.' } },
+            ],
+          })
+          hintLayer.show()
+        }
+      })
+    })
+  </script>
 </Layout>
