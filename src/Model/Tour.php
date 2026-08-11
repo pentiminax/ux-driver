@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Model;
 
+use Twig\Markup;
+
 final class Tour
 {
     /** @var Step[] */
@@ -20,8 +22,8 @@ final class Tour
 
     public function addStep(
         string $element,
-        string $title,
-        ?string $description = null,
+        string|Markup $title,
+        string|Markup|null $description = null,
         string $side = 'bottom',
         string $align = 'start',
     ): self {

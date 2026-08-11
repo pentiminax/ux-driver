@@ -18,11 +18,11 @@ final class TourComponentTest extends TestCase
     #[Test]
     public function it_exposes_filtered_options_for_the_template(): void
     {
-        $component              = new Tour();
-        $component->id          = 'onboarding';
-        $component->showProgress = true;
-        $component->smoothScroll = true;
-        $component->overlayColor = '#111111';
+        $component                 = new Tour();
+        $component->id             = 'onboarding';
+        $component->showProgress   = true;
+        $component->smoothScroll   = true;
+        $component->overlayColor   = '#111111';
         $component->overlayOpacity = null;
 
         $this->assertSame([

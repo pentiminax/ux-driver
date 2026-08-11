@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Model;
 
+use Pentiminax\UX\Driver\Html\PopoverContent;
+use Twig\Markup;
+
 final readonly class Step
 {
     public function __construct(
         private string $element,
-        private string $title,
-        private ?string $description = null,
+        private string|Markup $title,
+        private string|Markup|null $description = null,
         private string $side = 'bottom',
         private string $align = 'start',
     ) {
@@ -20,12 +23,12 @@ final readonly class Step
         return $this->element;
     }
 
-    public function getTitle(): string
+    public function getTitle(): string|Markup
     {
         return $this->title;
     }
 
-    public function getDescription(): ?string
+    public function getDescription(): string|Markup|null
     {
         return $this->description;
     }
@@ -48,8 +51,8 @@ final readonly class Step
         return [
             'element' => $this->element,
             'popover' => array_filter([
-                'title'       => $this->title,
-                'description' => $this->description,
+                'title'       => PopoverContent::render($this->title),
+                'description' => PopoverContent::render($this->description),
                 'side'        => $this->side,
                 'align'       => $this->align,
             ], static fn ($v) => null !== $v),
