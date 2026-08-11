@@ -149,6 +149,9 @@ driver.js writes `title` and `description` with `innerHTML`. Escaping the value 
 attribute is not enough: the controller reads it back through `dataset`, which decodes it
 once, and hands the result straight to `innerHTML`.
 
+The same holds for `progressText` and the three button labels, which driver.js also writes
+with `innerHTML`.
+
 The bundle therefore escapes on the PHP side, at the single point where both modes converge
 — `Step::toArray()` for the builder and `ux_highlight()`, `titleHtml()`/`descriptionHtml()`
 for the components. Any plain string is escaped with
@@ -171,11 +174,108 @@ is the bundle's default; **sanitising rich text authored by a user remains the
 application's responsibility** (`symfony/html-sanitizer` or an equivalent) before it is
 marked as trusted.
 
-## Options disponibles (V1)
+## Options globales
 
-- `showProgress`, `animate`, `smoothScroll`, `allowClose`
-- `overlayColor`, `overlayOpacity`, `stagePadding`
-- `once()` — persistance via `localStorage`
+Every option below exists as a fluent method on the builder and as a prop of
+`<twig:Driver:Tour>`, under the exact Driver.js key. Both modes produce the same
+Driver.js config.
+
+| Option / méthode           | Type                    | Défaut driver.js |
+|----------------------------|-------------------------|------------------|
+| `showProgress`             | `bool`                  | `false`          |
+| `animate`                  | `bool`                  | `true`           |
+| `smoothScroll`             | `bool`                  | `false`          |
+| `allowClose`               | `bool`                  | `true`           |
+| `allowScroll`              | `bool`                  | `false`          |
+| `allowKeyboardControl`     | `bool`                  | `true`           |
+| `disableActiveInteraction` | `bool`                  | `false`          |
+| `duration`                 | `int` (ms)              | `500`            |
+| `overlayColor`             | `string`                | `#000`           |
+| `overlayOpacity`           | `float`                 | `0.7`            |
+| `overlayClickBehavior`     | `close` \| `nextStep`   | `close`          |
+| `stagePadding`             | `int`                   | `10`             |
+| `stageRadius`              | `int`                   | `5`              |
+| `popoverClass`             | `string`                | —                |
+| `popoverOffset`            | `int`                   | `10`             |
+| `showButtons`              | `next\|previous\|close` | all              |
+| `disableButtons`           | `next\|previous\|close` | none             |
+| `progressText`             | `string`                | `{{current}} of {{total}}` |
+| `nextBtnText`              | `string`                | `Next &rarr;`    |
+| `prevBtnText`              | `string`                | `&larr; Previous`|
+| `doneBtnText`              | `string`                | `Done`           |
+
+`once()` is not a Driver.js option — it is this bundle's `localStorage` persistence.
+
+Callback-valued options (`onPopoverRender`, and `overlayClickBehavior` as a function) are
+deliberately out of the PHP surface: they cannot be serialized. Use the
+[Stimulus events](#cycle-de-vie) instead.
+
+`progressText`, `nextBtnText`, `prevBtnText` and `doneBtnText` are written by driver.js with
+`innerHTML`, exactly like the popover title and description, so they go through the same
+escaping (see [Sécurité](#sécurité--contenu-des-popovers)). Wrap them in `ux_driver_html()`
+when you need markup — an arrow entity, for instance.
+
+### Localisation et thème
+
+```php
+$tour = $this->tourBuilder->create('onboarding')
+    ->addStep('#stats', 'Statistiques', 'Suivez vos KPIs')
+    ->progressText('Étape {{current}} sur {{total}}')
+    ->nextBtnText('Suivant')
+    ->prevBtnText('Précédent')
+    ->doneBtnText('Terminer')
+    ->popoverClass('tour-popover')
+    ->stageRadius(12)
+    ->overlayColor('#0f172a')
+    ->overlayOpacity(0.6);
+```
+
+The same tour declared with the component:
+
+```twig
+<twig:Driver:Tour
+    id="onboarding"
+    progressText="Étape {{ '{{current}}' }} sur {{ '{{total}}' }}"
+    nextBtnText="Suivant"
+    prevBtnText="Précédent"
+    doneBtnText="Terminer"
+    popoverClass="tour-popover"
+    :stageRadius="12"
+    overlayColor="#0f172a"
+    :overlayOpacity="0.6"
+>
+    …
+</twig:Driver:Tour>
+```
+
+Hide or disable buttons — pass the Driver.js names, or the `Button` enum from PHP:
+
+```twig
+<twig:Driver:Tour id="onboarding" :showButtons="['next', 'previous']" :disableButtons="['close']" />
+```
+
+```php
+use Pentiminax\UX\Driver\Enum\Button;
+
+$tour->showButtons(Button::Next, Button::Previous)->disableButtons(Button::Close);
+```
+
+`popoverClass` targets the popover wrapper, so theming stays plain CSS:
+
+```css
+.tour-popover { --driver-popover-bg: #0f172a; color: #f8fafc; }
+```
+
+### Valeurs invalides
+
+Options with a finite value set are backed by PHP enums
+(`Pentiminax\UX\Driver\Enum\Button`, `Pentiminax\UX\Driver\Enum\OverlayClickBehavior`).
+An unknown value raises a `\ValueError` while the page renders, in both modes — never a
+silently ignored Driver.js option:
+
+```
+"finish" is not a valid backing value for enum Pentiminax\UX\Driver\Enum\Button
+```
 
 ### Sémantique de `once()`
 
