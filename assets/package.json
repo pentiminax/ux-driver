@@ -1,0 +1,41 @@
+{
+  "name": "@pentiminax/ux-driver",
+  "description": "driver.js integration for Symfony",
+  "license": "MIT",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/controller.js",
+  "symfony": {
+    "controllers": {
+      "tour": {
+        "main": "dist/controller.js",
+        "webpackMode": "eager",
+        "fetch": "lazy",
+        "enabled": true,
+        "autoimport": {
+          "driver.js/dist/driver.css": true
+        }
+      }
+    },
+    "importmap": {
+      "@hotwired/stimulus": "^3.0.0",
+      "driver.js": "^1.3.0"
+    }
+  },
+  "peerDependencies": {
+    "@hotwired/stimulus": "^3.0.0",
+    "driver.js": "^1.3.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@hotwired/stimulus": "^3.0.0",
+    "driver.js": "^1.3.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

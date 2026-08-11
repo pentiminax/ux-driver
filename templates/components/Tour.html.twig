@@ -1,0 +1,9 @@
+<div {{ attributes.defaults({
+    'data-controller': 'pentiminax--ux-driver--tour',
+    'data-pentiminax--ux-driver--tour-id-value': id,
+    'data-pentiminax--ux-driver--tour-options-value': this.options()|json_encode,
+    'data-pentiminax--ux-driver--tour-autostart-value': autostart ? 'true' : 'false',
+    'data-pentiminax--ux-driver--tour-once-value': once ? 'true' : 'false',
+}) }}>
+    {% block content %}{% endblock %}
+</div>
