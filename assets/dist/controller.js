@@ -15,11 +15,14 @@ class default_1 extends Controller {
         if (this.onceValue && alreadySeen(this.idValue, this.onceValue)) {
             return;
         }
-        const config = {
-            ...this.optionsValue,
-            steps: resolveSteps(this.stepsValue, this.stepTargets),
-        };
+        const steps = resolveSteps(this.stepsValue, this.stepTargets);
+        if (steps.length === 0) {
+            this.dispatch('empty', { detail: { id: this.idValue }, prefix: 'ux-driver' });
+            return;
+        }
+        const config = { ...this.optionsValue, steps };
         this.dispatch('pre-connect', { detail: { config }, prefix: 'ux-driver' });
+        this.teardown();
         this.instance = driver(config);
         this.dispatch('connect', { detail: { driver: this.instance }, prefix: 'ux-driver' });
         this.instance.drive();
@@ -29,10 +32,12 @@ class default_1 extends Controller {
         const steps = resolveSteps(this.stepsValue, this.stepTargets);
         const step = steps[0];
         if (!step) {
+            this.dispatch('empty', { detail: { id: this.idValue }, prefix: 'ux-driver' });
             return;
         }
         const config = { ...this.optionsValue };
         this.dispatch('pre-connect', { detail: { config, step }, prefix: 'ux-driver' });
+        this.teardown();
         this.instance = driver(config);
         this.dispatch('connect', { detail: { driver: this.instance }, prefix: 'ux-driver' });
         this.instance.highlight({
@@ -41,6 +46,9 @@ class default_1 extends Controller {
         });
     }
     disconnect() {
+        this.teardown();
+    }
+    teardown() {
         this.instance?.destroy();
         this.instance = null;
     }

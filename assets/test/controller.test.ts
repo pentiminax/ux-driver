@@ -165,4 +165,69 @@ describe('tour controller', () => {
 
         expect(mocks.destroy).toHaveBeenCalledTimes(1);
     });
+
+    it('destroys the previous instance when start is called twice', async () => {
+        const element = await mount(tour());
+        const controller = controllerFor(element) as unknown as {start(): void};
+
+        controller.start();
+        controller.start();
+
+        expect(mocks.driver).toHaveBeenCalledTimes(2);
+        expect(mocks.destroy).toHaveBeenCalledTimes(1);
+        expect(mocks.drive).toHaveBeenCalledTimes(2);
+    });
+
+    it('destroys the running tour when switching from start to highlight', async () => {
+        const element = await mount(tour());
+        const controller = controllerFor(element) as unknown as {
+            start(): void;
+            highlight(): void;
+        };
+
+        controller.start();
+        controller.highlight();
+
+        expect(mocks.driver).toHaveBeenCalledTimes(2);
+        expect(mocks.destroy).toHaveBeenCalledTimes(1);
+        expect(mocks.highlight).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits ux-driver:empty and builds nothing when no step resolves', async () => {
+        const element = await mount(tour(`data-${IDENTIFIER}-once-value="true"`, ''));
+        const empty = vi.fn();
+
+        element.addEventListener('ux-driver:empty', empty);
+
+        (controllerFor(element) as unknown as {start(): void}).start();
+
+        expect(mocks.driver).not.toHaveBeenCalled();
+        expect(mocks.drive).not.toHaveBeenCalled();
+        expect(empty).toHaveBeenCalledTimes(1);
+        expect((empty.mock.calls[0]![0] as CustomEvent).detail).toMatchObject({id: 'onboarding'});
+        expect(localStorage.getItem('ux-driver:seen:onboarding')).toBeNull();
+    });
+
+    it('emits ux-driver:empty when highlight finds no step', async () => {
+        const element = await mount(tour('', ''));
+        const empty = vi.fn();
+
+        element.addEventListener('ux-driver:empty', empty);
+
+        (controllerFor(element) as unknown as {highlight(): void}).highlight();
+
+        expect(mocks.driver).not.toHaveBeenCalled();
+        expect(mocks.highlight).not.toHaveBeenCalled();
+        expect(empty).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays idempotent when disconnect runs twice', async () => {
+        const element = await mount(tour(`data-${IDENTIFIER}-autostart-value="true"`));
+        const controller = controllerFor(element) as unknown as {disconnect(): void};
+
+        controller.disconnect();
+        controller.disconnect();
+
+        expect(mocks.destroy).toHaveBeenCalledTimes(1);
+    });
 });
