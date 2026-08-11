@@ -20,6 +20,9 @@ test('built docs match the GitHub Pages contract', async () => {
 
   assert.match(index, /UX Driver/)
   assert.match(intro, /Installation placeholder/)
+  assert.match(intro, /class="heading-anchor"/)
+  assert.match(intro, /href="#installation-placeholder"/)
+  assert.match(intro, /aria-label="Link to this section"/)
   assert.match(output, /\/ux-driver\//)
   assert.match(sitemap, /https:\/\/pentiminax\.github\.io\/ux-driver\//)
   assert.ok(pagefindFiles.includes('pagefind.js'))
