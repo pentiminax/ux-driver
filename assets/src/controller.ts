@@ -60,7 +60,6 @@ export default class extends Controller {
         this.dispatch('connect', {detail: {driver: this.instance}, prefix: 'ux-driver'});
 
         this.instance.drive(this.indexParam(event));
-        markSeen(this.idValue, this.onceValue);
     }
 
     highlight(): void {
@@ -145,7 +144,13 @@ export default class extends Controller {
             onNextClick: this.intercept('next', (instance) => instance.moveNext()),
             onPrevClick: this.intercept('previous', (instance) => instance.movePrevious()),
             onCloseClick: this.intercept('close', (instance) => instance.destroy()),
-            onDoneClick: this.intercept('done', (instance) => instance.destroy()),
+            // The only completion signal driver.js has: it also covers the right arrow on the
+            // last step, advanceOnClick and overlayClickBehavior. Abandoning a tour through
+            // close or Escape is not a completion and must not persist the once flag.
+            onDoneClick: this.intercept('done', (instance) => {
+                markSeen(this.idValue, this.onceValue);
+                instance.destroy();
+            }),
             onDestroyStarted: this.intercept('destroy-started', (instance) => instance.destroy()),
         };
     }
