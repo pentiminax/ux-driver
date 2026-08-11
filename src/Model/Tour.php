@@ -6,6 +6,7 @@ namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
+use Pentiminax\UX\Driver\Html\PopoverContent;
 use Twig\Markup;
 
 final class Tour
@@ -165,32 +166,33 @@ final class Tour
     }
 
     /**
-     * driver.js substitutes `{{current}}` and `{{total}}` in the template.
+     * driver.js substitutes `{{current}}` and `{{total}}` in the template, then writes it with
+     * innerHTML — hence the same escaping as the popover content.
      */
-    public function progressText(string $template): self
+    public function progressText(string|Markup $template): self
     {
-        $this->options['progressText'] = $template;
+        $this->options['progressText'] = PopoverContent::render($template);
 
         return $this;
     }
 
-    public function nextBtnText(string $text): self
+    public function nextBtnText(string|Markup $text): self
     {
-        $this->options['nextBtnText'] = $text;
+        $this->options['nextBtnText'] = PopoverContent::render($text);
 
         return $this;
     }
 
-    public function prevBtnText(string $text): self
+    public function prevBtnText(string|Markup $text): self
     {
-        $this->options['prevBtnText'] = $text;
+        $this->options['prevBtnText'] = PopoverContent::render($text);
 
         return $this;
     }
 
-    public function doneBtnText(string $text): self
+    public function doneBtnText(string|Markup $text): self
     {
-        $this->options['doneBtnText'] = $text;
+        $this->options['doneBtnText'] = PopoverContent::render($text);
 
         return $this;
     }

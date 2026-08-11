@@ -105,6 +105,21 @@ final class TourTest extends TestCase
         ], $tour->getOptions());
     }
 
+    /**
+     * driver.js writes the progress text and the button labels with innerHTML too, so they are
+     * the same sink as the popover title and description and get the same treatment.
+     */
+    #[Test]
+    public function it_escapes_the_progress_text_and_the_button_labels(): void
+    {
+        $tour = (new Tour('onboarding'))
+            ->progressText('<img src=x onerror=alert(1)>')
+            ->nextBtnText(new Markup('Suivant &rarr;', 'UTF-8'));
+
+        $this->assertSame('&lt;img src=x onerror=alert(1)&gt;', $tour->getOptions()['progressText']);
+        $this->assertSame('Suivant &rarr;', $tour->getOptions()['nextBtnText']);
+    }
+
     #[Test]
     public function it_rejects_an_unknown_button_name(): void
     {

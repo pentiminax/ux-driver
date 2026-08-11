@@ -149,6 +149,9 @@ driver.js writes `title` and `description` with `innerHTML`. Escaping the value 
 attribute is not enough: the controller reads it back through `dataset`, which decodes it
 once, and hands the result straight to `innerHTML`.
 
+The same holds for `progressText` and the three button labels, which driver.js also writes
+with `innerHTML`.
+
 The bundle therefore escapes on the PHP side, at the single point where both modes converge
 — `Step::toArray()` for the builder and `ux_highlight()`, `titleHtml()`/`descriptionHtml()`
 for the components. Any plain string is escaped with
@@ -206,6 +209,11 @@ Driver.js config.
 Callback-valued options (`onPopoverRender`, and `overlayClickBehavior` as a function) are
 deliberately out of the PHP surface: they cannot be serialized. Use the
 [Stimulus events](#cycle-de-vie) instead.
+
+`progressText`, `nextBtnText`, `prevBtnText` and `doneBtnText` are written by driver.js with
+`innerHTML`, exactly like the popover title and description, so they go through the same
+escaping (see [Sécurité](#sécurité--contenu-des-popovers)). Wrap them in `ux_driver_html()`
+when you need markup — an arrow entity, for instance.
 
 ### Localisation et thème
 

@@ -6,7 +6,9 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
+use Pentiminax\UX\Driver\Html\PopoverContent;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
+use Twig\Markup;
 
 #[AsTwigComponent('Driver:Tour')]
 final class Tour
@@ -53,13 +55,13 @@ final class Tour
     /** @var list<Button|string>|null */
     public ?array $disableButtons = null;
 
-    public ?string $progressText = null;
+    public string|Markup|null $progressText = null;
 
-    public ?string $nextBtnText = null;
+    public string|Markup|null $nextBtnText = null;
 
-    public ?string $prevBtnText = null;
+    public string|Markup|null $prevBtnText = null;
 
-    public ?string $doneBtnText = null;
+    public string|Markup|null $doneBtnText = null;
 
     /**
      * @return array<string, mixed>
@@ -86,10 +88,10 @@ final class Tour
             'popoverOffset'            => $this->popoverOffset,
             'showButtons'              => null === $this->showButtons ? null : Button::normalizeAll($this->showButtons),
             'disableButtons'           => null === $this->disableButtons ? null : Button::normalizeAll($this->disableButtons),
-            'progressText'             => $this->progressText,
-            'nextBtnText'              => $this->nextBtnText,
-            'prevBtnText'              => $this->prevBtnText,
-            'doneBtnText'              => $this->doneBtnText,
+            'progressText'             => PopoverContent::render($this->progressText),
+            'nextBtnText'              => PopoverContent::render($this->nextBtnText),
+            'prevBtnText'              => PopoverContent::render($this->prevBtnText),
+            'doneBtnText'              => PopoverContent::render($this->doneBtnText),
         ], static fn ($value) => null !== $value);
     }
 
