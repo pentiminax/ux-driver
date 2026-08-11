@@ -39,13 +39,18 @@ execute a CSS file as JavaScript.
 
 ## Compatibility
 
-| Dependency              | Supported range      |
-|-------------------------|----------------------|
-| PHP                     | >= 8.2               |
-| Symfony                 | 7.x / 8.x            |
-| Symfony StimulusBundle  | ^2.0 \| ^3.0         |
-| Symfony UX TwigComponent| ^2.0 \| ^3.0         |
-| driver.js               | >= 1.8.0 < 2 (`^1.8.0`) |
+| Dependency               | Supported range         | Verified in CI                                     |
+|--------------------------|-------------------------|----------------------------------------------------|
+| PHP                      | >= 8.2                  | 8.2, 8.3, 8.4                                      |
+| Symfony                  | 7.x / 8.x               | highest stable allowed by `composer.json`          |
+| Symfony StimulusBundle   | ^2.0 \| ^3.0            | highest stable allowed by `composer.json`          |
+| Symfony UX TwigComponent | ^2.0 \| ^3.0            | highest stable allowed by `composer.json`          |
+| driver.js                | >= 1.8.0 < 2 (`^1.8.0`) | 1.8.0 (floor) and `latest`                         |
+| Node.js (build only)     | >= 22                   | 22                                                 |
+
+CI does not run a Symfony version matrix yet: each PHP job installs the highest stable
+dependency set the constraints allow. The driver.js floor, by contrast, is pinned and tested
+explicitly, so a 1.8.0-only regression cannot pass unnoticed.
 
 The same `^1.8.0` range is declared in `peerDependencies` and in the `symfony.importmap`
 metadata of `assets/package.json`, so AssetMapper and npm/Webpack Encore installs cannot
@@ -156,12 +161,18 @@ The controller dispatches:
 ```bash
 composer install
 vendor/bin/phpunit
+composer analyse
 
 cd assets
 npm install
-npm run build
+npm run typecheck
 npm test
+npm run build
+git diff --exit-code dist
 ```
+
+`assets/dist` is committed, so CI fails if a fresh `npm run build` diverges from it: rebuild and
+commit `dist` with any change to `assets/src`.
 
 ## License
 

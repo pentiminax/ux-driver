@@ -15,52 +15,70 @@ jobs:
     name: PHP ${{ matrix.php }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          coverage: none
+          coverage: xdebug
+
+      - name: Dump PHP diagnostics
+        run: php -i && php -m
 
       - name: Install dependencies
         run: composer install --no-progress
 
-      - name: Run automated tests
-        run: vendor/bin/phpunit
+      - name: Check for dangerous and broken dependencies
+        run: composer audit
 
-  assets:
+      - name: Run automated tests
+        run: vendor/bin/phpunit --coverage-text --coverage-xml build/coverage-xml --coverage-cobertura build/cobertura.xml
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v7
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  js:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         driver: ['1.8.0', 'latest']
-    name: JavaScript (driver.js ${{ matrix.driver }})
+    name: JS (driver.js ${{ matrix.driver }})
+    defaults:
+      run:
+        working-directory: assets
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: '22'
 
       - name: Install dependencies
-        working-directory: assets
-        run: npm install
+        run: npm install --no-progress
 
       - name: Pin driver.js to the minimum supported version
         if: matrix.driver != 'latest'
-        working-directory: assets
         run: npm install driver.js@${{ matrix.driver }} --no-save
 
       - name: Typecheck
-        working-directory: assets
         run: npm run typecheck
 
-      - name: Build assets
-        working-directory: assets
+      - name: Run tests
+        run: npm test
+
+      - name: Build
         run: npm run build
 
-      - name: Run tests
-        working-directory: assets
-        run: npm test
+      - name: Check the committed dist matches a fresh build
+        run: git diff --exit-code dist
