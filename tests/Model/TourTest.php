@@ -193,4 +193,127 @@ final class TourTest extends TestCase
             ],
         ], $step->toArray());
     }
+
+    #[Test]
+    public function it_serializes_every_step_option(): void
+    {
+        $step = new Step('.cta', 'Action', options: [
+            'popoverClass'             => 'promo',
+            'showButtons'              => [Button::Next, 'previous'],
+            'disableButtons'           => ['close'],
+            'showProgress'             => true,
+            'progressText'             => '{{current}}/{{total}}',
+            'nextBtnText'              => 'Suivant',
+            'prevBtnText'              => 'Précédent',
+            'doneBtnText'              => 'Terminer',
+            'disableActiveInteraction' => true,
+            'advanceOnClick'           => true,
+            'skipMissingElement'       => true,
+            'waitForElement'           => 2000,
+            'data'                     => ['tracking' => 'cta'],
+        ]);
+
+        $this->assertSame([
+            'element' => '.cta',
+            'popover' => [
+                'title'          => 'Action',
+                'side'           => 'bottom',
+                'align'          => 'start',
+                'popoverClass'   => 'promo',
+                'showButtons'    => ['next', 'previous'],
+                'disableButtons' => ['close'],
+                'showProgress'   => true,
+                'progressText'   => '{{current}}/{{total}}',
+                'nextBtnText'    => 'Suivant',
+                'prevBtnText'    => 'Précédent',
+                'doneBtnText'    => 'Terminer',
+            ],
+            'disableActiveInteraction' => true,
+            'advanceOnClick'           => true,
+            'skipMissingElement'       => true,
+            'waitForElement'           => 2000,
+            'data'                     => ['tracking' => 'cta'],
+        ], $step->toArray());
+    }
+
+    /**
+     * The declarative mode already carries element, title, description, side and align as their
+     * own attributes; only what is left travels as JSON.
+     */
+    #[Test]
+    public function it_exposes_the_remaining_options_as_extras(): void
+    {
+        $step = new Step('.cta', 'Action', options: [
+            'popoverClass'   => 'promo',
+            'advanceOnClick' => true,
+        ]);
+
+        $this->assertSame([
+            'popover'        => ['popoverClass' => 'promo'],
+            'advanceOnClick' => true,
+        ], $step->extras());
+        $this->assertSame([], (new Step('.cta', 'Action'))->extras());
+    }
+
+    #[Test]
+    public function it_builds_a_centered_step_without_an_element(): void
+    {
+        $step = new Step(title: 'Bienvenue');
+
+        $this->assertNull($step->getElement());
+        $this->assertSame([
+            'popover' => [
+                'title' => 'Bienvenue',
+                'side'  => 'bottom',
+                'align' => 'start',
+            ],
+        ], $step->toArray());
+    }
+
+    #[Test]
+    public function it_escapes_the_step_progress_text_and_button_labels(): void
+    {
+        $step = new Step('.cta', options: [
+            'progressText' => '<img src=x onerror=alert(1)>',
+            'nextBtnText'  => new Markup('Suivant &rarr;', 'UTF-8'),
+        ]);
+
+        $popover = $step->toArray()['popover'];
+
+        $this->assertSame('&lt;img src=x onerror=alert(1)&gt;', $popover['progressText']);
+        $this->assertSame('Suivant &rarr;', $popover['nextBtnText']);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_step_option(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown step option "onNextClick"');
+
+        new Step('.cta', options: ['onNextClick' => 'noop']);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_step_button(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        new Step('.cta', options: ['showButtons' => ['finish']]);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_side(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        new Step('.cta', side: 'diagonal');
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_alignment(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        new Step('.cta', align: 'justify');
+    }
 }

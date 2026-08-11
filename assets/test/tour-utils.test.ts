@@ -120,4 +120,64 @@ describe('resolveSteps', () => {
             },
         ]);
     });
+
+    it('merges the nested step config declared by PHP', () => {
+        const target = document.createElement('div');
+        target.dataset.stepTitle = 'Panier';
+        target.dataset.stepSide = 'top';
+        target.dataset.stepAlign = 'center';
+        target.dataset.stepConfig = JSON.stringify({
+            popover: {popoverClass: 'promo', showButtons: ['next'], nextBtnText: 'Suivant'},
+            advanceOnClick: true,
+            waitForElement: 2000,
+            skipMissingElement: true,
+            data: {tracking: 'cart'},
+        });
+
+        expect(resolveSteps([], [target])).toEqual([
+            {
+                element: target,
+                popover: {
+                    popoverClass: 'promo',
+                    showButtons: ['next'],
+                    nextBtnText: 'Suivant',
+                    title: 'Panier',
+                    description: undefined,
+                    side: 'top',
+                    align: 'center',
+                },
+                advanceOnClick: true,
+                waitForElement: 2000,
+                skipMissingElement: true,
+                data: {tracking: 'cart'},
+            },
+        ]);
+    });
+
+    it('omits the element of a centered step so driver.js centers the popover', () => {
+        const target = document.createElement('template');
+        target.dataset.stepCentered = 'true';
+        target.dataset.stepTitle = 'Bienvenue';
+
+        const [step] = resolveSteps([], [target]);
+
+        expect(step).not.toHaveProperty('element');
+        expect(step?.popover?.title).toBe('Bienvenue');
+    });
+
+    it('falls back to the attribute options when the config payload is malformed', () => {
+        const target = document.createElement('div');
+        target.dataset.stepTitle = 'En-tête';
+        target.dataset.stepConfig = '{not json';
+
+        expect(resolveSteps([], [target])[0]).toEqual({
+            element: target,
+            popover: {
+                title: 'En-tête',
+                description: undefined,
+                side: undefined,
+                align: undefined,
+            },
+        });
+    });
 });

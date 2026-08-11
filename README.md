@@ -277,7 +277,99 @@ silently ignored Driver.js option:
 "finish" is not a valid backing value for enum Pentiminax\UX\Driver\Enum\Button
 ```
 
-### Sémantique de `once()`
+## Options par étape
+
+Every option below overrides its global counterpart for a single step, again under the exact
+Driver.js key. `Step::toArray()` and `<twig:Driver:Step>` build the same payload — the
+component instantiates the very same model, so both modes validate identically.
+
+| Option                     | Type                    | Rôle                                              |
+|----------------------------|-------------------------|---------------------------------------------------|
+| `popoverClass`             | `string`                | classe CSS du popover de cette étape              |
+| `showButtons`              | `next\|previous\|close` | boutons affichés                                  |
+| `disableButtons`           | `next\|previous\|close` | boutons désactivés                                |
+| `showProgress`             | `bool`                  | compteur de progression                           |
+| `progressText`             | `string`                | gabarit du compteur                               |
+| `nextBtnText`              | `string`                | libellé du bouton suivant                         |
+| `prevBtnText`              | `string`                | libellé du bouton précédent                       |
+| `doneBtnText`              | `string`                | libellé du bouton final                           |
+| `disableActiveInteraction` | `bool`                  | rend la cible non cliquable                       |
+| `advanceOnClick`           | `bool`                  | cliquer la cible passe à l'étape suivante         |
+| `skipMissingElement`       | `bool`                  | ignore l'étape si la cible est absente            |
+| `waitForElement`           | `int` (ms)              | attend l'apparition de la cible avant d'abandonner |
+| `data`                     | `array`                 | données arbitraires relayées dans les événements  |
+
+From the builder, they go in the `options` array; `side` and `align` keep their dedicated
+arguments:
+
+```php
+$tour->addStep('#cart', 'Panier', 'Vos articles', side: 'top', options: [
+    'popoverClass'   => 'promo',
+    'showButtons'    => [Button::Next],
+    'nextBtnText'    => 'Suivant',
+    'advanceOnClick' => true,
+    'data'           => ['tracking' => 'cart'],
+]);
+```
+
+An unknown key raises an `\InvalidArgumentException` listing the accepted options — the
+callback-valued Driver.js options (`onNextClick`, `onPopoverRender`, …) are not serializable
+and belong to the [Stimulus events](#cycle-de-vie).
+
+The same step declared with the component:
+
+```twig
+<twig:Driver:Step
+    :order="1"
+    title="Panier"
+    description="Vos articles"
+    side="top"
+    popoverClass="promo"
+    :showButtons="['next']"
+    nextBtnText="Suivant"
+    :advanceOnClick="true"
+    :data="{tracking: 'cart'}"
+/>
+```
+
+### Étape centrée
+
+A step with no target centers its popover on the screen — the usual opener for a tour. Omit
+`element` from the builder, or pass `centered` to the component:
+
+```php
+$tour->addStep(title: 'Bienvenue', description: 'Découvrons l\'application');
+```
+
+```twig
+<twig:Driver:Step :order="1" :centered="true" title="Bienvenue" description="Découvrons l'application" />
+```
+
+The component then renders an inert `<template>` instead of an empty `<div>`: the attributes
+still travel to the controller, but nothing is added to the page layout.
+
+### Cibles asynchrones (Turbo, modales)
+
+A target rendered by a Turbo Frame or opened in a modal does not exist when the tour starts.
+`waitForElement` polls for it, `skipMissingElement` moves on if it never shows up:
+
+```twig
+<twig:Driver:Step :order="2" title="Détail" tag="turbo-frame" id="detail"
+                  :waitForElement="2000" :skipMissingElement="true" />
+```
+
+```php
+$tour->addStep('#detail', 'Détail', options: [
+    'waitForElement'     => 2000,
+    'skipMissingElement' => true,
+]);
+```
+
+Without `skipMissingElement`, a target that never appears leaves the tour stuck on that step.
+
+## Persistance — `once()`
+
+### Sémantique
 
 `once()` means **do not replay after completion**, not "do not replay after the first
 display". The flag is persisted when the tour reaches its end — the `ux-driver:done` event,

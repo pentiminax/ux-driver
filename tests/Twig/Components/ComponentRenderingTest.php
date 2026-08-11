@@ -64,11 +64,66 @@ final class ComponentRenderingTest extends KernelTestCase
 
         $this->assertSame(2, substr_count($markup, 'data-pentiminax--ux-driver--tour-target="step"'));
 
-        $this->assertStringContainsString('<header  data-pentiminax--ux-driver--tour-target="step" data-step-order="1" data-step-title="Header" data-step-side="bottom" data-step-align="start" data-step-description="Top bar" class="page-header">', $markup);
-        $this->assertStringContainsString('<div  data-pentiminax--ux-driver--tour-target="step" data-step-order="2" data-step-title="Sidebar" data-step-side="right" data-step-align="end">', $markup);
+        $this->assertStringContainsString('<header  data-pentiminax--ux-driver--tour-target="step" data-step-order="1" data-step-side="bottom" data-step-align="start" data-step-title="Header" data-step-description="Top bar" class="page-header">', $markup);
+        $this->assertStringContainsString('<div  data-pentiminax--ux-driver--tour-target="step" data-step-order="2" data-step-side="right" data-step-align="end" data-step-title="Sidebar">', $markup);
 
         $this->assertStringContainsString('Mon en-tête', $markup);
         $this->assertStringContainsString('Ma sidebar', $markup);
+    }
+
+    /**
+     * Everything the declarative mode cannot express as a dedicated attribute travels as a
+     * single JSON payload, already nested the way driver.js expects it.
+     */
+    #[Test]
+    public function it_renders_the_remaining_step_options_as_a_json_config(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Step title="Panier" popoverClass="promo" :showButtons="['next']" :advanceOnClick="true" :waitForElement="2000" :data="{tracking: 'cart'}" />
+            TWIG);
+
+        $this->assertSame([
+            'popover'        => ['popoverClass' => 'promo', 'showButtons' => ['next']],
+            'advanceOnClick' => true,
+            'waitForElement' => 2000,
+            'data'           => ['tracking' => 'cart'],
+        ], json_decode($this->attribute($markup, 'data-step-config'), true, flags: \JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
+    public function it_omits_the_config_attribute_when_no_option_is_given(): void
+    {
+        $markup = $this->render('<twig:Driver:Step title="Header" />');
+
+        $this->assertStringNotContainsString('data-step-config', $markup);
+    }
+
+    /**
+     * A centered step has no target to highlight: rendering a real element would add an empty
+     * box to the page, so the attributes ride on an inert `<template>` instead.
+     */
+    #[Test]
+    public function it_renders_a_centered_step_as_an_inert_template(): void
+    {
+        $markup = $this->render('<twig:Driver:Step title="Bienvenue" :centered="true" />');
+
+        $this->assertStringContainsString('<template ', $markup);
+        $this->assertStringContainsString('</template>', $markup);
+        $this->assertStringContainsString('data-step-centered="true"', $markup);
+    }
+
+    #[Test]
+    public function it_escapes_the_step_button_labels_in_the_rendered_config(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Step title="Panier" nextBtnText="<img src=x onerror=alert(1)>" />
+            TWIG);
+
+        $this->assertStringNotContainsString('onerror=alert(1)>', $markup);
+        $this->assertSame(
+            '&lt;img src=x onerror=alert(1)&gt;',
+            json_decode($this->attribute($markup, 'data-step-config'), true, flags: \JSON_THROW_ON_ERROR)['popover']['nextBtnText'],
+        );
     }
 
     /**

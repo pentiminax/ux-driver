@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Model;
 
+use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
+use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\PopoverContent;
 use Twig\Markup;
 
+/**
+ * @phpstan-import-type StepOptions from Step
+ */
 final class Tour
 {
     /** @var Step[] */
@@ -23,14 +28,22 @@ final class Tour
     {
     }
 
+    /**
+     * @param string|null $element a CSS selector, or null for a step centered on the screen
+     * @param StepOptions $options
+     *
+     * @throws \InvalidArgumentException when an option is not a serializable driver.js step option
+     * @throws \ValueError               when a button, side or alignment value is unknown
+     */
     public function addStep(
-        string $element,
-        string|Markup $title,
+        ?string $element = null,
+        string|Markup|null $title = null,
         string|Markup|null $description = null,
-        string $side = 'bottom',
-        string $align = 'start',
+        Side|string $side = Side::Bottom,
+        Align|string $align = Align::Start,
+        array $options = [],
     ): self {
-        $this->steps[] = new Step($element, $title, $description, $side, $align);
+        $this->steps[] = new Step($element, $title, $description, $side, $align, $options);
 
         return $this;
     }
