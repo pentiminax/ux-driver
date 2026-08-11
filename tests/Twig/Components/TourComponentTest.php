@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Tests\Twig\Components;
 
+use Pentiminax\UX\Driver\Enum\Button;
+use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
+use Pentiminax\UX\Driver\Model\Tour as TourModel;
 use Pentiminax\UX\Driver\Twig\Components\Tour;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,5 +35,75 @@ final class TourComponentTest extends TestCase
             'allowClose'   => true,
             'overlayColor' => '#111111',
         ], $component->options());
+    }
+
+    /**
+     * The two modes feed the same Stimulus value, so a divergence here means a tour behaves
+     * differently depending on how it was declared.
+     */
+    #[Test]
+    public function it_serializes_the_same_config_as_the_builder(): void
+    {
+        $component                           = new Tour();
+        $component->id                       = 'onboarding';
+        $component->animate                  = false;
+        $component->duration                 = 150;
+        $component->allowScroll              = true;
+        $component->overlayClickBehavior     = 'nextStep';
+        $component->stageRadius              = 12;
+        $component->allowKeyboardControl     = false;
+        $component->disableActiveInteraction = true;
+        $component->popoverClass             = 'my-popover';
+        $component->popoverOffset            = 16;
+        $component->showButtons              = [Button::Next, 'previous'];
+        $component->disableButtons           = ['close'];
+        $component->progressText             = '{{current}} / {{total}}';
+        $component->nextBtnText              = 'Suivant';
+        $component->prevBtnText              = 'Précédent';
+        $component->doneBtnText              = 'Terminer';
+
+        $builder = (new TourModel('onboarding'))
+            ->showProgress()
+            ->animate(false)
+            ->smoothScroll(false)
+            ->allowClose()
+            ->duration(150)
+            ->allowScroll()
+            ->overlayClickBehavior(OverlayClickBehavior::NextStep)
+            ->stageRadius(12)
+            ->allowKeyboardControl(false)
+            ->disableActiveInteraction()
+            ->popoverClass('my-popover')
+            ->popoverOffset(16)
+            ->showButtons(Button::Next, 'previous')
+            ->disableButtons('close')
+            ->progressText('{{current}} / {{total}}')
+            ->nextBtnText('Suivant')
+            ->prevBtnText('Précédent')
+            ->doneBtnText('Terminer');
+
+        $this->assertSame($builder->getOptions(), $component->options());
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_button_name(): void
+    {
+        $component              = new Tour();
+        $component->showButtons = ['finish'];
+
+        $this->expectException(\ValueError::class);
+
+        $component->options();
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_overlay_click_behavior(): void
+    {
+        $component                       = new Tour();
+        $component->overlayClickBehavior = 'previousStep';
+
+        $this->expectException(\ValueError::class);
+
+        $component->options();
     }
 }

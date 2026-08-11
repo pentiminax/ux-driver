@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Tests\Model;
 
+use Pentiminax\UX\Driver\Enum\Button;
+use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
 use Pentiminax\UX\Driver\Model\Step;
 use Pentiminax\UX\Driver\Model\Tour;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -63,6 +65,60 @@ final class TourTest extends TestCase
             'overlayOpacity' => 0.75,
             'stagePadding'   => 8,
         ], $tour->getOptions());
+    }
+
+    #[Test]
+    public function it_serializes_every_global_driver_option(): void
+    {
+        $tour = (new Tour('onboarding'))
+            ->duration(150)
+            ->allowScroll()
+            ->overlayClickBehavior(OverlayClickBehavior::NextStep)
+            ->stageRadius(12)
+            ->allowKeyboardControl(false)
+            ->disableActiveInteraction()
+            ->popoverClass('my-popover')
+            ->popoverOffset(16)
+            ->showButtons(Button::Next, 'previous')
+            ->disableButtons('close')
+            ->progressText('{{current}} / {{total}}')
+            ->nextBtnText('Suivant')
+            ->prevBtnText('Précédent')
+            ->doneBtnText('Terminer');
+
+        $this->assertSame([
+            'showProgress'             => true,
+            'duration'                 => 150,
+            'allowScroll'              => true,
+            'overlayClickBehavior'     => 'nextStep',
+            'stageRadius'              => 12,
+            'allowKeyboardControl'     => false,
+            'disableActiveInteraction' => true,
+            'popoverClass'             => 'my-popover',
+            'popoverOffset'            => 16,
+            'showButtons'              => ['next', 'previous'],
+            'disableButtons'           => ['close'],
+            'progressText'             => '{{current}} / {{total}}',
+            'nextBtnText'              => 'Suivant',
+            'prevBtnText'              => 'Précédent',
+            'doneBtnText'              => 'Terminer',
+        ], $tour->getOptions());
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_button_name(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        (new Tour('onboarding'))->showButtons('finish');
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_overlay_click_behavior(): void
+    {
+        $this->expectException(\ValueError::class);
+
+        (new Tour('onboarding'))->overlayClickBehavior('previousStep');
     }
 
     /**
