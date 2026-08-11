@@ -15,12 +15,23 @@
         "autoimport": {
           "driver.js/dist/driver.css": true
         }
+      },
+      "hints": {
+        "main": "dist/hints-controller.js",
+        "webpackMode": "eager",
+        "fetch": "lazy",
+        "enabled": true,
+        "autoimport": {
+          "driver.js/dist/hints.css": true
+        }
       }
     },
     "importmap": {
       "@hotwired/stimulus": "^3.0.0",
       "driver.js": "^1.8.0",
-      "driver.js/dist/driver.css": "^1.8.0"
+      "driver.js/hints": "^1.8.0",
+      "driver.js/dist/driver.css": "^1.8.0",
+      "driver.js/dist/hints.css": "^1.8.0"
     }
   },
   "peerDependencies": {
