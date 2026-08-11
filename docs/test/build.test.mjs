@@ -35,5 +35,6 @@ test('built docs match the GitHub Pages contract', async () => {
   assert.match(output, /\/ux-driver\//)
   assert.match(sitemap, /https:\/\/pentiminax\.github\.io\/ux-driver\//)
   assert.ok(pagefindFiles.includes('pagefind.js'))
+  assert.doesNotMatch(output, /__VITE_PRELOAD__/)
   assert.doesNotMatch(output, /ux-datatables|ux-sweet-alert/)
 })

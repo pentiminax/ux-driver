@@ -6,6 +6,7 @@ interface Props {
 const { label } = Astro.props
 ---
 
-<section role="tabpanel" aria-label={label} class="tab-panel">
+<section class="tab-panel">
+  <h3>{label}</h3>
   <slot />
 </section>

@@ -103,6 +103,7 @@ const repoUrl = 'https://github.com/pentiminax/ux-driver'
       const input = document.querySelector('[data-pagefind-search]') as HTMLInputElement | null
       const results = document.querySelector('[data-search-results]')
       let pagefind: any
+      const importPagefind = new Function('path', 'return import(path)')
 
       async function openSearch() {
         dialog?.showModal()
@@ -122,7 +123,7 @@ const repoUrl = 'https://github.com/pentiminax/ux-driver'
           if (results) results.textContent = ''
           return
         }
-        pagefind ||= await import(`${root.dataset.baseUrl}pagefind/pagefind.js`)
+        pagefind ||= await importPagefind(`${root.dataset.baseUrl}pagefind/pagefind.js`)
         const search = await pagefind.search(input.value)
         const fragments = await Promise.all(search.results.slice(0, 6).map((result: any) => result.data()))
         results.textContent = ''

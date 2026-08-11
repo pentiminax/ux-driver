@@ -505,23 +505,14 @@ code {
   width: 1.7rem;
 }
 
-.tabs [role='tablist'] {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.tabs [role='tab'] {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  color: var(--ink);
-  padding: 0.4rem 0.7rem;
-}
-
 .tab-panel {
   border: 1px solid var(--line);
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   padding: 1rem;
+}
+
+.tab-panel h3 {
+  margin-top: 0;
 }
 
 .table-wrap {

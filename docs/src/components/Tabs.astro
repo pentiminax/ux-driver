@@ -1,16 +1,3 @@
----
-const labels = Astro.slots.default
-  ? (await Astro.slots.render('default')).matchAll(/aria-label="([^"]+)"/g)
-  : []
----
-
 <div class="tabs">
-  <div role="tablist" aria-label="Code examples">
-    {Array.from(labels, ([, label], index) => (
-      <button type="button" role="tab" aria-selected={index === 0 ? 'true' : 'false'}>
-        {label}
-      </button>
-    ))}
-  </div>
   <slot />
 </div>
