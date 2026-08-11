@@ -31,7 +31,10 @@ jobs:
 
   assets:
     runs-on: ubuntu-latest
-    name: JavaScript
+    strategy:
+      matrix:
+        driver: ['1.8.0', 'latest']
+    name: JavaScript (driver.js ${{ matrix.driver }})
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,6 +47,15 @@ jobs:
       - name: Install dependencies
         working-directory: assets
         run: npm install
+
+      - name: Pin driver.js to the minimum supported version
+        if: matrix.driver != 'latest'
+        working-directory: assets
+        run: npm install driver.js@${{ matrix.driver }} --no-save
+
+      - name: Typecheck
+        working-directory: assets
+        run: npm run typecheck
 
       - name: Build assets
         working-directory: assets

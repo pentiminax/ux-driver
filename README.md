@@ -23,6 +23,41 @@ composer require pentiminax/ux-driver
 
 The bundle registers the AssetMapper path automatically. With Webpack Encore, import the controller from `@pentiminax/ux-driver/dist/controller.js` and ensure `driver.js` is installed.
 
+## Compatibility
+
+| Dependency              | Supported range      |
+|-------------------------|----------------------|
+| PHP                     | >= 8.2               |
+| Symfony                 | 7.x / 8.x            |
+| Symfony StimulusBundle  | ^2.0 \| ^3.0         |
+| Symfony UX TwigComponent| ^2.0 \| ^3.0         |
+| driver.js               | >= 1.8.0 < 2 (`^1.8.0`) |
+
+The same `^1.8.0` range is declared in `peerDependencies` and in the `symfony.importmap`
+metadata of `assets/package.json`, so AssetMapper and npm/Webpack Encore installs cannot
+resolve to a different baseline.
+
+### Why 1.8.0?
+
+The v0.1 option surface relies on `advanceOnClick` and `waitForElement`, both introduced in
+driver.js 1.8.0. Anything older would install successfully while silently ignoring options
+the bundle advertises.
+
+| Option / capability                                | Minimum driver.js |
+|----------------------------------------------------|-------------------|
+| `showProgress`, `animate`, `smoothScroll`, `allowClose` | 1.3.0         |
+| `overlayColor`, `overlayOpacity`, `stagePadding`   | 1.3.0             |
+| `duration`                                         | 1.6.0             |
+| `skipMissingElement`                               | 1.7.0             |
+| `advanceOnClick`, `waitForElement`                 | 1.8.0             |
+
+`once()` is implemented by this bundle via `localStorage` and does not depend on driver.js.
+
+**Hints are not supported.** There is no Hints API in any published driver.js release — the
+1.8.0 type definitions export only `driver`, `Driver`, `Config`, `DriveStep`, `Popover`,
+`Side`, `Alignment`, `AllowedButtons`, `DriverHook`, `PopoverDOM`, `State` and
+`StageDefinition`. Hints will stay out of scope until driver.js ships them upstream.
+
 ## Mode builder (PHP / Twig)
 
 Build a tour fluently in Twig and attach it to any trigger element:
