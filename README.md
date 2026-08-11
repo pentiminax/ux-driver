@@ -149,6 +149,20 @@ Highlight a single element without a multi-step tour:
 - `overlayColor`, `overlayOpacity`, `stagePadding`
 - `once()` — persistance via `localStorage`
 
+### Stockage indisponible
+
+`once()` stores its flag under `ux-driver:seen:<id>`. Every access to that store is guarded:
+a sandboxed iframe, blocked cookies, some private-browsing modes or a full quota make
+`window.localStorage` — or `setItem` — throw, and an unguarded read would break the whole
+controller.
+
+Fallback when the store is unreachable: the tour is treated as **never seen**, so it plays
+again on every page load rather than never playing at all. Nothing is logged and no
+exception escapes.
+
+The bundle also exports `forgetSeen(id)` from `@pentiminax/ux-driver/tour-utils` to clear the
+flag and re-arm a `once()` tour.
+
 ## Restart policy
 
 Destroy-and-restart: every `start` or `highlight` destroys the active driver.js instance

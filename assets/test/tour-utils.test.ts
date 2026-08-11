@@ -1,5 +1,5 @@
-import {afterEach, describe, expect, it} from 'vitest';
-import {alreadySeen, markSeen, resolveSteps, storageKey} from '../src/tour-utils.js';
+import {afterEach, describe, expect, it, vi} from 'vitest';
+import {alreadySeen, forgetSeen, markSeen, resolveSteps, storageKey} from '../src/tour-utils.js';
 
 describe('storageKey', () => {
     it('builds a namespaced key from the tour id', () => {
@@ -7,8 +7,9 @@ describe('storageKey', () => {
     });
 });
 
-describe('alreadySeen / markSeen', () => {
+describe('alreadySeen / markSeen / forgetSeen', () => {
     afterEach(() => {
+        vi.restoreAllMocks();
         localStorage.clear();
     });
 
@@ -20,6 +21,58 @@ describe('alreadySeen / markSeen', () => {
         markSeen('onboarding', true);
 
         expect(alreadySeen('onboarding', true)).toBe(true);
+    });
+
+    it('never touches storage when once is disabled', () => {
+        const getItem = vi.spyOn(Storage.prototype, 'getItem');
+        const setItem = vi.spyOn(Storage.prototype, 'setItem');
+
+        alreadySeen('onboarding', false);
+        markSeen('onboarding', false);
+
+        expect(getItem).not.toHaveBeenCalled();
+        expect(setItem).not.toHaveBeenCalled();
+    });
+
+    it('forgets a persisted flag so the tour can play again', () => {
+        markSeen('onboarding', true);
+
+        forgetSeen('onboarding');
+
+        expect(alreadySeen('onboarding', true)).toBe(false);
+    });
+
+    it.each([
+        ['getItem', () => expect(alreadySeen('onboarding', true)).toBe(false)],
+        ['setItem', () => markSeen('onboarding', true)],
+        ['removeItem', () => forgetSeen('onboarding')],
+    ])('survives a throwing %s', (method, act) => {
+        vi.spyOn(Storage.prototype, method as 'getItem' | 'setItem' | 'removeItem').mockImplementation(
+            () => {
+                throw new Error('SecurityError');
+            },
+        );
+
+        expect(act).not.toThrow();
+    });
+
+    it('survives a window.localStorage getter that throws', () => {
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+
+        Object.defineProperty(window, 'localStorage', {
+            configurable: true,
+            get() {
+                throw new Error('SecurityError');
+            },
+        });
+
+        try {
+            expect(alreadySeen('onboarding', true)).toBe(false);
+            expect(() => markSeen('onboarding', true)).not.toThrow();
+            expect(() => forgetSeen('onboarding')).not.toThrow();
+        } finally {
+            Object.defineProperty(window, 'localStorage', descriptor!);
+        }
     });
 });
 
