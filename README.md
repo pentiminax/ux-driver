@@ -143,6 +143,34 @@ Highlight a single element without a multi-step tour:
 </button>
 ```
 
+## Sécurité — contenu des popovers
+
+driver.js writes `title` and `description` with `innerHTML`. Escaping the value in the Twig
+attribute is not enough: the controller reads it back through `dataset`, which decodes it
+once, and hands the result straight to `innerHTML`.
+
+The bundle therefore escapes on the PHP side, at the single point where both modes converge
+— `Step::toArray()` for the builder and `ux_highlight()`, `titleHtml()`/`descriptionHtml()`
+for the components. Any plain string is escaped with
+`htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')` and rendered as inert text:
+
+```twig
+{# renders the literal text <b>Attention</b>, no markup #}
+<twig:Driver:Step title="<b>Attention</b>" />
+```
+
+Opt in explicitly with `ux_driver_html()` (or a `Twig\Markup` instance from PHP) when the
+markup is trusted:
+
+```twig
+<twig:Driver:Step :title="ux_driver_html('<b>Attention</b>')" />
+```
+
+`ux_driver_html()` disables escaping for that value — never pass user input to it. Escaping
+is the bundle's default; **sanitising rich text authored by a user remains the
+application's responsibility** (`symfony/html-sanitizer` or an equivalent) before it is
+marked as trusted.
+
 ## Options disponibles (V1)
 
 - `showProgress`, `animate`, `smoothScroll`, `allowClose`

@@ -9,6 +9,7 @@ use Pentiminax\UX\Driver\Model\Tour;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Twig\Markup;
 
 /**
  * @internal
@@ -62,6 +63,49 @@ final class TourTest extends TestCase
             'overlayOpacity' => 0.75,
             'stagePadding'   => 8,
         ], $tour->getOptions());
+    }
+
+    /**
+     * driver.js renders the popover with innerHTML, so an unescaped payload is executable
+     * markup. The escaping happens once here; the browser decodes it once through `dataset`.
+     */
+    #[Test]
+    public function it_escapes_popover_content_in_the_step_payload(): void
+    {
+        $step = new Step(
+            '.cta',
+            '<script>alert(1)</script>',
+            '<img src=x onerror="alert(\'xss\')"> l\'"aide"',
+        );
+
+        $this->assertSame([
+            'element' => '.cta',
+            'popover' => [
+                'title'       => '&lt;script&gt;alert(1)&lt;/script&gt;',
+                'description' => '&lt;img src=x onerror=&quot;alert(&#039;xss&#039;)&quot;&gt; l&#039;&quot;aide&quot;',
+                'side'        => 'bottom',
+                'align'       => 'start',
+            ],
+        ], $step->toArray());
+    }
+
+    #[Test]
+    public function it_keeps_trusted_markup_untouched(): void
+    {
+        $step = new Step('.cta', new Markup('<b>Action</b>', 'UTF-8'));
+
+        $this->assertSame('<b>Action</b>', $step->toArray()['popover']['title']);
+    }
+
+    #[Test]
+    public function it_escapes_popover_content_added_through_the_builder(): void
+    {
+        $tour = (new Tour('onboarding'))
+            ->addStep('.header', '<script>alert(1)</script>')
+            ->addStep('.cta', new Markup('<b>Action</b>', 'UTF-8'));
+
+        $this->assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $tour->getSteps()[0]['popover']['title']);
+        $this->assertSame('<b>Action</b>', $tour->getSteps()[1]['popover']['title']);
     }
 
     #[Test]

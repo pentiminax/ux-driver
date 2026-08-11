@@ -85,6 +85,95 @@ final class ComponentRenderingTest extends KernelTestCase
         $this->assertStringNotContainsString('data-step-description', $markup);
     }
 
+    /**
+     * The whole point of escaping on the PHP side: the browser decodes the attribute once
+     * through `dataset`, and driver.js hands the result to innerHTML. The rendered attribute
+     * must therefore carry a doubly-encoded payload, so that one decoding still leaves inert
+     * text.
+     */
+    #[Test]
+    public function it_escapes_step_content_in_the_rendered_attributes(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Step title="<script>alert(1)</script>" description="<img src=x onerror=alert(1)>" />
+            TWIG);
+
+        $this->assertStringNotContainsString('<script>', $markup);
+        $this->assertStringContainsString('data-step-title="&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;"', $markup);
+        $this->assertStringContainsString('data-step-description="&amp;lt;img src=x onerror=alert(1)&amp;gt;"', $markup);
+
+        // What the controller actually reads once the browser has decoded the attribute.
+        $this->assertSame(
+            '<script>alert(1)</script>',
+            html_entity_decode(html_entity_decode($this->attribute($markup, 'data-step-title'), \ENT_QUOTES), \ENT_QUOTES),
+        );
+    }
+
+    #[Test]
+    public function it_keeps_trusted_markup_in_the_rendered_attributes(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Step :title="ux_driver_html('<b>Header</b>')" />
+            TWIG);
+
+        $this->assertSame('<b>Header</b>', $this->attribute($markup, 'data-step-title'));
+    }
+
+    #[Test]
+    public function it_escapes_highlight_content(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <button {{ ux_highlight('.help', '<script>alert(1)</script>') }}></button>
+            TWIG);
+
+        $this->assertStringNotContainsString('<script>', $markup);
+        $this->assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->firstStepTitle($markup));
+    }
+
+    #[Test]
+    public function it_escapes_builder_tour_content(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            {% set tour = create_tour('onboarding')
+                .addStep('.header', '<script>alert(1)</script>')
+                .addStep('.cta', ux_driver_html('<b>Action</b>')) %}
+            <button {{ ux_tour(tour) }}></button>
+            TWIG);
+
+        $this->assertStringNotContainsString('<script>', $markup);
+        $this->assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->firstStepTitle($markup));
+        $this->assertSame('<b>Action</b>', $this->stepsPayload($markup)[1]['popover']['title']);
+    }
+
+    private function attribute(string $markup, string $name): string
+    {
+        if (1 !== preg_match('/'.preg_quote($name, '/').'="([^"]*)"/', $markup, $matches)) {
+            self::fail(\sprintf('No "%s" attribute in: %s', $name, $markup));
+        }
+
+        return html_entity_decode($matches[1], \ENT_QUOTES);
+    }
+
+    /**
+     * The payload the controller receives: the browser decodes the attribute once before
+     * JSON.parse, which is exactly what html_entity_decode() reproduces here.
+     *
+     * @return array<int, array{popover: array<string, string>}>
+     */
+    private function stepsPayload(string $markup): array
+    {
+        $steps = json_decode($this->attribute($markup, 'data-pentiminax--ux-driver--tour-steps-value'), true, flags: \JSON_THROW_ON_ERROR);
+
+        self::assertIsArray($steps);
+
+        return $steps;
+    }
+
+    private function firstStepTitle(string $markup): string
+    {
+        return $this->stepsPayload($markup)[0]['popover']['title'];
+    }
+
     private function render(string $source): string
     {
         self::bootKernel();

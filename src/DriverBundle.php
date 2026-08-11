@@ -23,7 +23,7 @@ class DriverBundle extends AbstractBundle
     {
         $builder->prependExtensionConfig('twig_component', [
             'anonymous_template_directory' => 'components/',
-            'defaults'                       => [
+            'defaults'                     => [
                 'Pentiminax\UX\Driver\Twig\Components\\' => [
                     'template_directory' => '@Driver/components/',
                     'name_prefix'        => 'Driver',

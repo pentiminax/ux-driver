@@ -1,9 +1,9 @@
 <{{ tag }} {{ attributes.defaults({
     'data-pentiminax--ux-driver--tour-target': 'step',
     'data-step-order': order,
-    'data-step-title': title,
+    'data-step-title': this.titleHtml,
     'data-step-side': side,
     'data-step-align': align,
-}|merge(description is not null ? {'data-step-description': description} : {})) }}>
+}|merge(this.descriptionHtml is not null ? {'data-step-description': this.descriptionHtml} : {})) }}>
     {% block content %}{% endblock %}
 </{{ tag }}>
