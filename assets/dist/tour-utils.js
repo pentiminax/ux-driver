@@ -2,11 +2,31 @@ export function storageKey(id) {
     return `ux-driver:seen:${id}`;
 }
 export function alreadySeen(id, once) {
-    return once && localStorage.getItem(storageKey(id)) === '1';
+    if (!once) {
+        return false;
+    }
+    try {
+        return window.localStorage.getItem(storageKey(id)) === '1';
+    }
+    catch {
+        return false;
+    }
 }
 export function markSeen(id, once) {
-    if (once) {
-        localStorage.setItem(storageKey(id), '1');
+    if (!once) {
+        return;
+    }
+    try {
+        window.localStorage.setItem(storageKey(id), '1');
+    }
+    catch {
+    }
+}
+export function forgetSeen(id) {
+    try {
+        window.localStorage.removeItem(storageKey(id));
+    }
+    catch {
     }
 }
 export function resolveSteps(builderSteps, stepTargets) {

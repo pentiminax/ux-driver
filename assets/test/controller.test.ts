@@ -221,6 +221,23 @@ describe('tour controller', () => {
         expect(empty).toHaveBeenCalledTimes(1);
     });
 
+    it('still autostarts a once tour when localStorage is unavailable', async () => {
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+            throw new Error('SecurityError');
+        });
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+            throw new Error('SecurityError');
+        });
+
+        await mount(
+            tour(`data-${IDENTIFIER}-autostart-value="true" data-${IDENTIFIER}-once-value="true"`),
+        );
+
+        expect(mocks.drive).toHaveBeenCalledTimes(1);
+
+        vi.restoreAllMocks();
+    });
+
     it('stays idempotent when disconnect runs twice', async () => {
         const element = await mount(tour(`data-${IDENTIFIER}-autostart-value="true"`));
         const controller = controllerFor(element) as unknown as {disconnect(): void};
