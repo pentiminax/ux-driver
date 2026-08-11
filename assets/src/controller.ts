@@ -1,6 +1,5 @@
 import {Controller} from '@hotwired/stimulus';
 import {driver, type Config, type DriveStep, type Popover} from 'driver.js';
-import 'driver.js/dist/driver.css';
 import {alreadySeen, markSeen, resolveSteps} from './tour-utils.js';
 
 export default class extends Controller {
@@ -34,13 +33,19 @@ export default class extends Controller {
             return;
         }
 
-        const config: Config = {
-            ...this.optionsValue,
-            steps: resolveSteps(this.stepsValue, this.stepTargets),
-        };
+        const steps = resolveSteps(this.stepsValue, this.stepTargets);
+
+        if (steps.length === 0) {
+            this.dispatch('empty', {detail: {id: this.idValue}, prefix: 'ux-driver'});
+
+            return;
+        }
+
+        const config: Config = {...this.optionsValue, steps};
 
         this.dispatch('pre-connect', {detail: {config}, prefix: 'ux-driver'});
 
+        this.teardown();
         this.instance = driver(config);
         this.dispatch('connect', {detail: {driver: this.instance}, prefix: 'ux-driver'});
 
@@ -53,6 +58,8 @@ export default class extends Controller {
         const step = steps[0];
 
         if (!step) {
+            this.dispatch('empty', {detail: {id: this.idValue}, prefix: 'ux-driver'});
+
             return;
         }
 
@@ -60,6 +67,7 @@ export default class extends Controller {
 
         this.dispatch('pre-connect', {detail: {config, step}, prefix: 'ux-driver'});
 
+        this.teardown();
         this.instance = driver(config);
         this.dispatch('connect', {detail: {driver: this.instance}, prefix: 'ux-driver'});
 
@@ -70,6 +78,10 @@ export default class extends Controller {
     }
 
     disconnect(): void {
+        this.teardown();
+    }
+
+    private teardown(): void {
         this.instance?.destroy();
         this.instance = null;
     }
