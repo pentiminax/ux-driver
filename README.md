@@ -149,12 +149,22 @@ Highlight a single element without a multi-step tour:
 - `overlayColor`, `overlayOpacity`, `stagePadding`
 - `once()` — persistance via `localStorage`
 
+## Restart policy
+
+Destroy-and-restart: every `start` or `highlight` destroys the active driver.js instance
+before creating a new one. Re-triggering an action restarts the tour from the first step,
+and switching between `start` and `highlight` cleans up the previous instance, so
+overlapping overlays and listeners cannot pile up. `disconnect()` is idempotent.
+
 ## Events Stimulus
 
 The controller dispatches:
 
 - `ux-driver:pre-connect` — before driver.js is initialized
 - `ux-driver:connect` — after the driver instance is created
+- `ux-driver:empty` — when `start` or `highlight` resolves no step; detail is `{id}`. No
+  driver.js instance is created and the `once` flag is not persisted, so a tour that never
+  played can still run later.
 
 ## Development
 
