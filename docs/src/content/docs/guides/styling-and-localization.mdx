@@ -43,15 +43,45 @@ Use `popoverClass` to add a class to the Driver.js popover wrapper:
 ```
 
 ```css
-.checkout-popover {
-  --driver-popover-bg: #111827;
-  --driver-popover-text-color: #f9fafb;
-  --driver-popover-title-color: #ffffff;
-  --driver-popover-progress-text-color: #d1d5db;
+.driver-popover.checkout-popover {
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+.driver-popover.checkout-popover .driver-popover-title {
+  color: #ffffff;
+}
+
+.driver-popover.checkout-popover .driver-popover-description,
+.driver-popover.checkout-popover .driver-popover-progress-text {
+  color: #d1d5db;
+}
+
+.driver-popover.checkout-popover .driver-popover-footer-btn {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.driver-popover.checkout-popover .driver-popover-arrow-side-left {
+  border-left-color: #111827;
+}
+
+.driver-popover.checkout-popover .driver-popover-arrow-side-right {
+  border-right-color: #111827;
+}
+
+.driver-popover.checkout-popover .driver-popover-arrow-side-top {
+  border-top-color: #111827;
+}
+
+.driver-popover.checkout-popover .driver-popover-arrow-side-bottom {
+  border-bottom-color: #111827;
 }
 ```
 
-Driver.js also emits stable classes such as `.driver-popover`, `.driver-popover-title`, `.driver-popover-description`, `.driver-popover-footer`, `.driver-overlay`, and `.driver-active-element`.
+Driver.js 1.8 exposes `--driver-popover-font-family` for the popover font. Other popover colors are styled through classes such as `.driver-popover`, `.driver-popover-title`, `.driver-popover-description`, `.driver-popover-footer`, `.driver-popover-progress-text`, `.driver-popover-footer-btn`, `.driver-popover-arrow`, `.driver-overlay`, and `.driver-active-element`.
+
+Hints add `.driver-hint`, `.driver-hint-dot`, `.driver-hint-pulse`, `.driver-hint-popover`, and `.driver-hint-overlay`. Their CSS exposes `--driver-hint-size`, `--driver-hint-color`, and `--driver-hint-animation-duration`.
 
 ## Motion and accessibility
 

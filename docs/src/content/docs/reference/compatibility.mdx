@@ -15,9 +15,10 @@ order: 14
 | Twig | `^3.8` |
 | `@hotwired/stimulus` | `^3.0.0` |
 | `driver.js` | `^1.8.0` |
-| Node.js for docs/assets tooling | CI uses `22`; no package engine is declared |
+| Node.js for assets CI | `22` |
+| Node.js for docs deploy | Astro Pages action default `24`; no package engine is declared |
 
-The PHP ranges come from `composer.json`. The browser package ranges come from `assets/package.json`, the docs package uses Driver.js `^1.8.0` for the live demo, and CI configures Node 22 for JavaScript checks.
+The PHP ranges come from `composer.json`. The browser package ranges come from `assets/package.json`, the docs package uses Driver.js `^1.8.0` for the live demo, assets CI configures Node 22, and `.github/workflows/docs.yml` delegates the docs build to `withastro/action@v6` without a repo-declared Node engine.
 
 ## Why Driver.js 1.8 is the floor
 

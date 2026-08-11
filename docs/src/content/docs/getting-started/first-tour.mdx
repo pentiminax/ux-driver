@@ -32,7 +32,7 @@ Use Twig Components when the tour describes elements already present in the temp
 
 `autostart` defaults to `false` for Tours. Start a tour with `data-action="pentiminax--ux-driver--tour#start"`, or set `:autostart="true"` on `<twig:Driver:Tour>`.
 
-`once` is a bundle option, not a Driver.js option. It skips future autostarts only after the Tour is completed.
+`once` is a bundle option, not a Driver.js option. After successful completion, future starts return early until storage is cleared. That includes autostart and a manual `Start tour` trigger.
 
 ## Builder alternative
 

@@ -66,7 +66,8 @@ import 'driver.js/dist/hints.css'
 | Twig | `^3.8` |
 | Driver.js | `^1.8.0` |
 | Stimulus | `^3.0.0` |
-| Node.js for development | CI uses `22`; no package engine is declared |
+| Node.js for assets CI | `22` |
+| Node.js for docs deploy | Astro Pages action default `24`; no package engine is declared |
 
 Driver.js 1.8 is the floor because UX Driver exposes `advanceOnClick`, `waitForElement`, and the `driver.js/hints` entrypoint.
 

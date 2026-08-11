@@ -15,6 +15,7 @@ test('built docs match the GitHub Pages contract', async () => {
   const index = await readDistFile('index.html')
   const sitemap = await readDistFile('sitemap-index.xml')
   const pagefindFiles = await readdir(new URL('pagefind/', dist))
+  const assetFiles = await readdir(new URL('_astro/', dist))
   const requiredRoutes = [
     'getting-started/installation/index.html',
     'getting-started/first-tour/index.html',
@@ -32,6 +33,9 @@ test('built docs match the GitHub Pages contract', async () => {
     'reference/compatibility/index.html',
   ]
   const routePages = await Promise.all(requiredRoutes.map(readDistFile))
+  const css = (
+    await Promise.all(assetFiles.filter((file) => file.endsWith('.css')).map((file) => readDistFile(`_astro/${file}`)))
+  ).join('\n')
   const output = [index, sitemap, ...routePages].join('\n')
 
   assert.match(index, /UX Driver/)
@@ -57,6 +61,7 @@ test('built docs match the GitHub Pages contract', async () => {
   assert.match(output, /\/ux-driver\//)
   assert.match(sitemap, /https:\/\/pentiminax\.github\.io\/ux-driver\//)
   assert.ok(pagefindFiles.includes('pagefind.js'))
+  assert.match(css, /\.driver-hint/)
   assert.equal(existsSync(new URL('getting-started/introduction/index.html', dist)), false)
   assert.doesNotMatch(output, /__VITE_PRELOAD__/)
   assert.doesNotMatch(output, /ux-datatables|ux-sweet-alert/)
