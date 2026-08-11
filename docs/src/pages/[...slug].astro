@@ -1,0 +1,23 @@
+---
+import { getCollection, render } from 'astro:content'
+import Layout from '../layouts/Layout.astro'
+
+export async function getStaticPaths() {
+  const entries = await getCollection('docs')
+
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }))
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+---
+
+<Layout title={`${entry.data.title} | UX Driver`} description={entry.data.description}>
+  <a class="nav-link" href={import.meta.env.BASE_URL}>UX Driver</a>
+  <article>
+    <Content />
+  </article>
+</Layout>

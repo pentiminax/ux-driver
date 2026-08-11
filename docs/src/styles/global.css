@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  background: #F7F9FC;
+  color: #111827;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #F7F9FC;
+}
+
+a {
+  color: #5B5BD6;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  padding-block: 20vh 12vh;
+}
+
+.eyebrow {
+  color: #E23845;
+  font-weight: 700;
+  margin: 0;
+}
+
+h1 {
+  color: #0B1020;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+}
+
+p {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.button {
+  align-items: center;
+  background: #5B5BD6;
+  border-radius: 0.5rem;
+  color: white;
+  display: inline-flex;
+  font-weight: 700;
+  justify-content: center;
+  margin-top: 1rem;
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.nav-link {
+  display: inline-block;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.heading-anchor {
+  font-size: 0.75em;
+  margin-left: 0.5rem;
+  text-decoration: none;
+}
