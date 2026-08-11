@@ -1,0 +1,13 @@
+---
+interface Props {
+  type?: 'note' | 'tip' | 'warning'
+  title?: string
+}
+
+const { type = 'note', title = type[0].toUpperCase() + type.slice(1) } = Astro.props
+---
+
+<aside class={`aside aside-${type}`}>
+  <strong>{title}</strong>
+  <slot />
+</aside>

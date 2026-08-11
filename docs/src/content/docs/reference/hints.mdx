@@ -1,0 +1,63 @@
+---
+title: Hints
+description: Reference for Hint groups, Hint options, actions, and restore behavior.
+order: 12
+---
+
+# Hints reference
+
+Hints use the `driver.js/hints` entrypoint and the `pentiminax--ux-driver--hints` Stimulus controller.
+
+## Group options
+
+| Option or method | Type | Default |
+| --- | --- | --- |
+| `autostart` | `bool` | bundle `true` |
+| `beacon` / `beacon()` | `{side, align, animate, className}` | Driver.js default |
+| `buttonText` / `buttonText()` | `string` or trusted markup | Driver.js default |
+| `popoverClass` / `popoverClass()` | `string` | none |
+| `popoverOffset` / `popoverOffset()` | `int` | Driver.js default |
+| `overlay` / `overlay()` | `bool` | Driver.js default |
+| `overlayColor` / `overlayColor()` | `string` | Driver.js default |
+| `overlayOpacity` / `overlayOpacity()` | `float` | Driver.js default |
+
+`ux_hints(hints, false)` disables autostart for builder-created Hints.
+
+## Hint options
+
+| Option or prop | Type | Default |
+| --- | --- | --- |
+| `hintId` / `id` | `string` | Driver.js falls back to index |
+| `element` | selector or DOM element | required in builder, component host in Twig |
+| `title` | `string` or trusted markup | `null` |
+| `description` | `string` or trusted markup | `null` |
+| `side` | `top`, `right`, `bottom`, `left` | `bottom` |
+| `align` | `start`, `center`, `end` | `start` |
+| `tag` | HTML tag name | `div` |
+| `beacon` | `{side, align, animate, className}` | group or Driver.js default |
+| `popoverClass` | `string` | `null` |
+| `showButton` | `bool` | Driver.js default |
+| `buttonText` | `string` or trusted markup | group or Driver.js default |
+| `data` | array | `null` |
+
+Beacon `side` accepts `top`, `right`, `bottom`, and `left`; `align` accepts `start`, `center`, and `end`.
+
+## Actions
+
+| Action | Parameter |
+| --- | --- |
+| `show` | none |
+| `hide` | none |
+| `open` | `hintId` |
+| `close` | none |
+| `dismiss` | `hintId` |
+| `restore` | `hintId` |
+| `restoreAll` | none |
+| `refresh` | none |
+
+```twig
+<button data-action="pentiminax--ux-driver--hints#restore"
+        data-pentiminax--ux-driver--hints-hint-id-param="export">Restore export hint</button>
+```
+
+`restoreAll` calls Driver.js `restore()` for every hint, using the hint `id` when present and the zero-based index when it is not. This bundle does not persist dismissed Hints beyond the current Driver.js instance.

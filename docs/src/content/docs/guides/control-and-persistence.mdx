@@ -1,0 +1,57 @@
+---
+title: Control and persistence
+description: Control Tours and Hints from Stimulus actions and understand once storage.
+order: 5
+---
+
+# Control and persistence
+
+Tours and Hints are controlled by separate Stimulus controllers.
+
+## Autostart
+
+Tours default to `autostart=false`; Hints default to `autostart=true`.
+
+```twig
+<twig:Driver:Tour id="welcome" :autostart="true">
+    ...
+</twig:Driver:Tour>
+
+<twig:Driver:Hints id="help" :autostart="false">
+    ...
+</twig:Driver:Hints>
+```
+
+The builder helper follows the same defaults: `ux_tour(tour)` renders a non-autostarting Tour, while `ux_hints(hints)` autostarts unless you pass `false` as the second argument.
+
+## Once
+
+`once` belongs to UX Driver. It stores `ux-driver:seen:<id>` in `window.localStorage` only when the Tour reaches `ux-driver:done`.
+
+Closing a Tour, pressing Escape, or destroying it early does not mark it seen. Preventing the cancelable `ux-driver:done` event also prevents persistence.
+
+If storage is blocked or full, the controller treats the Tour as unseen and replays it. Storage failures are caught so the page keeps working.
+
+## Restart policy
+
+Calling `start` or `highlight` destroys the current Driver.js instance before creating the next one. Re-triggering starts from the first step unless you pass an index parameter.
+
+## Actions
+
+```twig
+<button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+<button data-action="pentiminax--ux-driver--tour#next">Next</button>
+<button data-action="pentiminax--ux-driver--tour#previous">Previous</button>
+<button data-action="pentiminax--ux-driver--tour#refresh">Refresh position</button>
+<button data-action="pentiminax--ux-driver--tour#destroy">Close tour</button>
+
+<button data-action="pentiminax--ux-driver--tour#moveTo"
+        data-pentiminax--ux-driver--tour-index-param="2">Go to step 3</button>
+```
+
+```twig
+<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
+<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
+<button data-action="pentiminax--ux-driver--hints#close">Close hint</button>
+<button data-action="pentiminax--ux-driver--hints#restoreAll">Restore hints</button>
+```

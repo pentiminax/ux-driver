@@ -1,0 +1,58 @@
+---
+title: Dynamic targets
+description: Handle Turbo Frames, modals, and missing elements in Tours and Hints.
+order: 8
+---
+
+# Dynamic targets
+
+Driver.js 1.8 supports waiting for Tour targets that appear after the Tour starts.
+
+## Wait for an element
+
+Use `waitForElement` on a builder-authored step when a Turbo Frame or modal renders the target asynchronously:
+
+```twig
+{% set tour = create_tour('invoice-tour')
+    .addStep('#invoice-preview', 'Invoice preview', 'This appears after the modal opens', options: {
+        waitForElement: 2000,
+    }) %}
+
+<div {{ ux_tour(tour) }}></div>
+```
+
+PHP uses the same selector-based option:
+
+```php
+$tour->addStep('#invoice-preview', 'Invoice preview', 'This appears after the modal opens', options: [
+    'waitForElement' => 2000,
+]);
+```
+
+## Skip missing targets
+
+Set `skipMissingElement` when the Tour should continue if the selector target never appears:
+
+```twig
+{% set tour = create_tour('admin-tour')
+    .addStep('.export', 'Optional export', 'Only admins see this control', options: {
+        skipMissingElement: true,
+    }) %}
+
+<div {{ ux_tour(tour) }}></div>
+```
+
+Without `skipMissingElement`, a missing target can leave the Tour waiting on that step.
+
+Declarative `<twig:Driver:Step>` targets the component host element that already rendered in the page. Use declarative mode only when that host exists before the Tour resolves; use builder-authored selector steps for async selector semantics.
+
+## Refresh
+
+After Turbo, a modal animation, or a layout shift changes positions, call `refresh` on the active controller:
+
+```twig
+<button data-action="pentiminax--ux-driver--tour#refresh">Refresh tour</button>
+<button data-action="pentiminax--ux-driver--hints#refresh">Refresh hints</button>
+```
+
+Hints do not expose `waitForElement` or `skipMissingElement` through this bundle. Render Hint targets when the Hints controller connects, or call `show` after the target exists.

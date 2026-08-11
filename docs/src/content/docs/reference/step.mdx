@@ -1,0 +1,75 @@
+---
+title: Step
+description: Reference for per-step options and placement values.
+order: 11
+---
+
+# Step reference
+
+A Step can target an element or be centered on the screen.
+
+## Builder arguments
+
+```php
+$tour->addStep(
+    element: '.selector',
+    title: 'Title',
+    description: 'Description',
+    side: 'bottom',
+    align: 'start',
+    options: []
+);
+```
+
+`element` may be `null` for a centered step.
+
+## Component props
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `order` | `int` | `0` |
+| `title` | `string` or trusted markup | `null` |
+| `description` | `string` or trusted markup | `null` |
+| `side` | `top`, `right`, `bottom`, `left` | `bottom` |
+| `align` | `start`, `center`, `end` | `start` |
+| `tag` | HTML tag name | `div` |
+| `centered` | `bool` | `false` |
+| `popoverClass` | `string` | `null` |
+| `showButtons` | list of `next`, `previous`, `close` | `null` |
+| `disableButtons` | list of `next`, `previous`, `close` | `null` |
+| `showProgress` | `bool` | `null` |
+| `progressText` | `string` or trusted markup | `null` |
+| `nextBtnText` | `string` or trusted markup | `null` |
+| `prevBtnText` | `string` or trusted markup | `null` |
+| `doneBtnText` | `string` or trusted markup | `null` |
+| `disableActiveInteraction` | `bool` | `null` |
+| `advanceOnClick` | `bool` | `null` |
+| `skipMissingElement` | `bool` | `null` |
+| `waitForElement` | `int` milliseconds | `null` |
+| `data` | array | `null` |
+
+`showButtons` and `disableButtons` accept only `next`, `previous`, and `close`.
+
+## Centered step
+
+```twig
+<twig:Driver:Step
+    :order="1"
+    :centered="true"
+    title="Welcome"
+    description="Start with the big picture"
+/>
+```
+
+The component renders a `<template>` host so no fake layout element is added.
+
+## Dynamic targets
+
+```php
+$tour->addStep('#late-panel', 'Panel', options: [
+    'waitForElement' => 2000,
+    'skipMissingElement' => true,
+]);
+```
+
+`advanceOnClick`, `waitForElement`, and `skipMissingElement` require Driver.js 1.8 through this package.

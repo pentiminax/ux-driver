@@ -1,0 +1,52 @@
+---
+title: First tour
+description: Build a Twig-first product tour and start it from a button.
+order: 2
+---
+
+# First tour
+
+Use Twig Components when the tour describes elements already present in the template.
+
+```twig
+<twig:Driver:Tour id="orders-tour" :once="true" :showProgress="true">
+    <button type="button" data-action="pentiminax--ux-driver--tour#start">
+        Start tour
+    </button>
+
+    <twig:Driver:Step :order="1" title="Orders" description="Review current customer orders">
+        <h1>Orders</h1>
+    </twig:Driver:Step>
+
+    <twig:Driver:Step :order="2" title="Filters" description="Narrow the list before export" side="bottom">
+        <form class="filters">...</form>
+    </twig:Driver:Step>
+
+    <twig:Driver:Step :order="3" title="Done" description="Export the filtered result" side="left">
+        <button type="button">Export</button>
+    </twig:Driver:Step>
+</twig:Driver:Tour>
+```
+
+## Start behavior
+
+`autostart` defaults to `false` for Tours. Start a tour with `data-action="pentiminax--ux-driver--tour#start"`, or set `:autostart="true"` on `<twig:Driver:Tour>`.
+
+`once` is a bundle option, not a Driver.js option. After successful completion, future starts return early until storage is cleared. That includes autostart and a manual `Start tour` trigger.
+
+## Builder alternative
+
+Use the builder when the steps are easier to assemble in PHP or Twig variables:
+
+```twig
+{% set tour = create_tour('orders-tour')
+    .addStep('.orders-title', 'Orders', 'Review current customer orders')
+    .addStep('.filters', 'Filters', 'Narrow the list before export')
+    .once() %}
+
+<button {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+    Start tour
+</button>
+```
+
+Both modes serialize the same Driver.js config for the Stimulus controller.
