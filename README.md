@@ -149,6 +149,19 @@ Highlight a single element without a multi-step tour:
 - `overlayColor`, `overlayOpacity`, `stagePadding`
 - `once()` — persistance via `localStorage`
 
+### Sémantique de `once()`
+
+`once()` means **do not replay after completion**, not "do not replay after the first
+display". The flag is persisted when the tour reaches its end — the `ux-driver:done` event,
+which driver.js also raises on the right arrow of the last step, on `advanceOnClick` and on
+`overlayClickBehavior: 'nextStep'`.
+
+Abandoning a tour — the close button, Escape, or anything else that destroys the instance
+early — persists nothing, so the tour plays again on the next visit. Preventing
+`ux-driver:done` also prevents the flag from being written.
+
+Use `forgetSeen(id)` (below) to re-arm a completed tour.
+
 ### Stockage indisponible
 
 `once()` stores its flag under `ux-driver:seen:<id>`. Every access to that store is guarded:

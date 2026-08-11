@@ -26,7 +26,6 @@ class default_1 extends Controller {
         this.instance = driver(config);
         this.dispatch('connect', { detail: { driver: this.instance }, prefix: 'ux-driver' });
         this.instance.drive(this.indexParam(event));
-        markSeen(this.idValue, this.onceValue);
     }
     highlight() {
         const steps = resolveSteps(this.stepsValue, this.stepTargets);
@@ -83,7 +82,10 @@ class default_1 extends Controller {
             onNextClick: this.intercept('next', (instance) => instance.moveNext()),
             onPrevClick: this.intercept('previous', (instance) => instance.movePrevious()),
             onCloseClick: this.intercept('close', (instance) => instance.destroy()),
-            onDoneClick: this.intercept('done', (instance) => instance.destroy()),
+            onDoneClick: this.intercept('done', (instance) => {
+                markSeen(this.idValue, this.onceValue);
+                instance.destroy();
+            }),
             onDestroyStarted: this.intercept('destroy-started', (instance) => instance.destroy()),
         };
     }

@@ -161,19 +161,69 @@ describe('tour controller', () => {
         expect(mocks.drive).not.toHaveBeenCalled();
     });
 
-    it('persists the once flag under ux-driver:seen:<id>', async () => {
+    it('persists the once flag under ux-driver:seen:<id> once the tour is completed', async () => {
         const element = await mount(tour(`data-${IDENTIFIER}-once-value="true"`));
         const controller = controllerFor(element) as unknown as {start(): void};
 
+        controller.start();
+
         expect(localStorage.getItem('ux-driver:seen:onboarding')).toBeNull();
 
-        controller.start();
+        invokeHook('onDoneClick', 1);
 
         expect(localStorage.getItem('ux-driver:seen:onboarding')).toBe('1');
 
         controller.start();
 
         expect(mocks.drive).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(['onCloseClick', 'onDestroyStarted'])(
+        'replays a once tour abandoned through %s',
+        async (hook) => {
+            const element = await mount(tour(`data-${IDENTIFIER}-once-value="true"`));
+            const controller = controllerFor(element) as unknown as {start(): void};
+
+            controller.start();
+            invokeHook(hook);
+
+            expect(localStorage.getItem('ux-driver:seen:onboarding')).toBeNull();
+
+            controller.start();
+
+            expect(mocks.drive).toHaveBeenCalledTimes(2);
+        },
+    );
+
+    it('does not persist the once flag when the completion is prevented', async () => {
+        const element = await mount(tour(`data-${IDENTIFIER}-once-value="true"`));
+
+        element.addEventListener('ux-driver:done', (event) => event.preventDefault());
+        (controllerFor(element) as unknown as {start(): void}).start();
+
+        invokeHook('onDoneClick', 1);
+
+        expect(localStorage.getItem('ux-driver:seen:onboarding')).toBeNull();
+    });
+
+    it('completes a single-step tour, where Next is already Done', async () => {
+        const single = `<div data-${IDENTIFIER}-target="step" data-step-order="1"
+                             data-step-title="Header"></div>`;
+        const element = await mount(tour(`data-${IDENTIFIER}-once-value="true"`, single));
+
+        (controllerFor(element) as unknown as {start(): void}).start();
+        invokeHook('onDoneClick');
+
+        expect(localStorage.getItem('ux-driver:seen:onboarding')).toBe('1');
+    });
+
+    it('never persists the once flag for a tour without once', async () => {
+        const element = await mount(tour());
+
+        (controllerFor(element) as unknown as {start(): void}).start();
+        invokeHook('onDoneClick', 1);
+
+        expect(localStorage.getItem('ux-driver:seen:onboarding')).toBeNull();
     });
 
     it('destroys the driver instance on disconnect', async () => {
