@@ -1,6 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
 import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
 import { alreadySeen, markSeen, resolveSteps } from './tour-utils.js';
 class default_1 extends Controller {
     constructor() {

@@ -19,7 +19,8 @@
     },
     "importmap": {
       "@hotwired/stimulus": "^3.0.0",
-      "driver.js": "^1.8.0"
+      "driver.js": "^1.8.0",
+      "driver.js/dist/driver.css": "^1.8.0"
     }
   },
   "peerDependencies": {

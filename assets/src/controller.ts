@@ -1,6 +1,5 @@
 import {Controller} from '@hotwired/stimulus';
 import {driver, type Config, type DriveStep, type Popover} from 'driver.js';
-import 'driver.js/dist/driver.css';
 import {alreadySeen, markSeen, resolveSteps} from './tour-utils.js';
 
 export default class extends Controller {

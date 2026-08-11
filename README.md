@@ -23,6 +23,20 @@ composer require pentiminax/ux-driver
 
 The bundle registers the AssetMapper path automatically. With Webpack Encore, import the controller from `@pentiminax/ux-driver/dist/controller.js` and ensure `driver.js` is installed.
 
+### Stylesheet
+
+The controller never imports `driver.css` at runtime: a native importmap browser module cannot
+execute a CSS file as JavaScript.
+
+- **AssetMapper**: nothing to do. `driver.js/dist/driver.css` is declared as a StimulusBundle
+  `autoimport` (and as an `symfony.importmap` entry, which StimulusBundle requires to resolve it),
+  so the stylesheet is injected for you.
+- **Webpack Encore**: import it yourself, once, in your entrypoint:
+
+  ```js
+  import 'driver.js/dist/driver.css';
+  ```
+
 ## Compatibility
 
 | Dependency              | Supported range      |
