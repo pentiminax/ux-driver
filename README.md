@@ -37,6 +37,13 @@ execute a CSS file as JavaScript.
   import 'driver.js/dist/driver.css';
   ```
 
+The hints controller ships with the same arrangement for `driver.js/dist/hints.css`: nothing to
+do under AssetMapper, one import under Webpack Encore.
+
+  ```js
+  import 'driver.js/dist/hints.css';
+  ```
+
 ## Compatibility
 
 | Dependency               | Supported range         | Verified in CI                                     |
@@ -72,10 +79,8 @@ the bundle advertises.
 
 `once()` is implemented by this bundle via `localStorage` and does not depend on driver.js.
 
-**Hints are not supported.** There is no Hints API in any published driver.js release — the
-1.8.0 type definitions export only `driver`, `Driver`, `Config`, `DriveStep`, `Popover`,
-`Side`, `Alignment`, `AllowedButtons`, `DriverHook`, `PopoverDOM`, `State` and
-`StageDefinition`. Hints will stay out of scope until driver.js ships them upstream.
+Hints are exposed by driver.js under a separate entrypoint, `driver.js/hints`, also available
+since 1.8.0. They are covered by their own controller — see [Hints](#hints).
 
 ## Mode builder (PHP / Twig)
 
@@ -460,6 +465,134 @@ Drive a running tour from your markup. All of them no-op when no tour is running
 <button data-action="pentiminax--ux-driver--tour#start"
         data-pentiminax--ux-driver--tour-index-param="1">Reprendre à l'étape 2</button>
 ```
+
+## Hints
+
+A tour walks the user through a sequence. Hints do the opposite: they paint a persistent beacon
+next to a handful of elements and wait for a click. They come from a separate driver.js
+entrypoint, `driver.js/hints`, and from a separate Stimulus controller,
+`pentiminax--ux-driver--hints`, so a page can run both at once.
+
+Unlike a tour, a hint group shows itself as soon as the controller connects.
+
+### Mode builder
+
+```twig
+{% set hints = create_hints('help')
+    .addHint('.export', 'export', 'Exporter', 'Téléchargez vos données au format CSV')
+    .addHint('.filters', 'filters', 'Filtres', 'Affinez la liste', 'right')
+    .beacon(side: 'top', animate: false)
+    .buttonText('Compris')
+    .overlay() %}
+
+<div {{ ux_hints(hints) }}></div>
+```
+
+`HintsBuilder` is injectable in PHP, exactly like `TourBuilder`:
+
+```php
+use Pentiminax\UX\Driver\Builder\HintsBuilder;
+
+public function __construct(private readonly HintsBuilder $hintsBuilder) {}
+
+public function index(): Response
+{
+    $hints = $this->hintsBuilder->create('help')
+        ->addHint('#export', 'export', 'Exporter', 'Téléchargez vos données')
+        ->overlay();
+
+    return $this->render('dashboard/index.html.twig', ['hints' => $hints]);
+}
+```
+
+Pass `false` as the second argument of `ux_hints()` to keep the beacons hidden until an action
+shows them: `{{ ux_hints(hints, false) }}`.
+
+### Mode déclaratif
+
+```twig
+<twig:Driver:Hints id="help" :overlay="true" buttonText="Compris">
+    <twig:Driver:Hint hintId="export" title="Exporter" description="Téléchargez vos données"
+                      tag="button" class="export">
+        Exporter
+    </twig:Driver:Hint>
+
+    <twig:Driver:Hint hintId="filters" title="Filtres" side="right" tag="aside" class="filters">
+        Mes filtres
+    </twig:Driver:Hint>
+</twig:Driver:Hints>
+```
+
+Beacons are not ordered: they all appear at once, so there is no `order` prop as on
+`<twig:Driver:Step>`. Hints declared in PHP win over the nested `<twig:Driver:Hint>` targets.
+
+### Options du groupe
+
+| Option           | Type     | Description                                          |
+|------------------|----------|------------------------------------------------------|
+| `beacon`         | array    | Default beacon for every hint of the group           |
+| `buttonText`     | string   | Label of the popover button                          |
+| `popoverClass`   | string   | Extra class on every popover                         |
+| `popoverOffset`  | int      | Distance between the popover and its element         |
+| `overlay`        | bool     | Dim the page while a hint is open                    |
+| `overlayColor`   | string   | Overlay color                                        |
+| `overlayOpacity` | float    | Overlay opacity                                      |
+
+### Options par hint
+
+| Option         | Type          | Description                                             |
+|----------------|---------------|---------------------------------------------------------|
+| `hintId`       | string        | Stable id for the `open`, `dismiss` and `restore` actions |
+| `title`        | string        | Popover title                                            |
+| `description`  | string        | Popover description                                      |
+| `side`         | string        | Popover side: `top`, `bottom`, `left`, `right`           |
+| `align`        | string        | Popover alignment: `start`, `center`, `end`              |
+| `beacon`       | array         | Beacon of this hint: `side`, `align`, `animate`, `className` |
+| `popoverClass` | string        | Extra class on this popover                              |
+| `showButton`   | bool          | Show the popover button                                  |
+| `buttonText`   | string        | Label of this popover button                             |
+| `data`         | array         | Arbitrary payload, handed back in the Stimulus events    |
+
+Without `hintId`, driver.js falls back to the index of the hint. Any other key raises an
+`\InvalidArgumentException`; callbacks are not options here either — see the events below.
+
+`title`, `description` and `buttonText` go through the same escaping as the tour popovers, and
+`ux_driver_html()` is the same opt-out — see [Sécurité](#sécurité--contenu-des-popovers).
+
+### Events Stimulus
+
+| Event                          | driver.js hook  | Cancelable |
+|--------------------------------|-----------------|------------|
+| `ux-driver:hints-pre-connect`  | —               | no         |
+| `ux-driver:hints-connect`      | —               | no         |
+| `ux-driver:empty`              | —               | no         |
+| `ux-driver:hint-open`          | `onOpen`        | no         |
+| `ux-driver:hint-dismiss`       | `onDismiss`     | no         |
+| `ux-driver:hint-button-click`  | `onButtonClick` | no         |
+
+The three hint events carry `{groupId, hintId, hint, element, data, hints}`. None of them is
+cancelable: driver.js opens, dismisses and closes on its own whether or not a callback is
+supplied, so there is no default behaviour to take over.
+
+### Actions Stimulus
+
+```twig
+<button data-action="pentiminax--ux-driver--hints#show">Afficher les astuces</button>
+<button data-action="pentiminax--ux-driver--hints#hide">Masquer</button>
+<button data-action="pentiminax--ux-driver--hints#close">Fermer le popover</button>
+<button data-action="pentiminax--ux-driver--hints#refresh">Repositionner</button>
+<button data-action="pentiminax--ux-driver--hints#restoreAll">Tout réafficher</button>
+
+<button data-action="pentiminax--ux-driver--hints#open"
+        data-pentiminax--ux-driver--hints-hint-id-param="export">Ouvrir</button>
+<button data-action="pentiminax--ux-driver--hints#dismiss"
+        data-pentiminax--ux-driver--hints-hint-id-param="export">Retirer</button>
+<button data-action="pentiminax--ux-driver--hints#restore"
+        data-pentiminax--ux-driver--hints-hint-id-param="export">Réafficher</button>
+```
+
+All of them no-op when no group is running, and `show` hides the previous group first. Nothing
+is persisted: unlike `once()`, a dismissed hint comes back on the next page load.
 
 ## Development
 

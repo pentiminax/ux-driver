@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Tests\Twig;
 
+use Pentiminax\UX\Driver\Builder\HintsBuilder;
 use Pentiminax\UX\Driver\Builder\TourBuilder;
+use Pentiminax\UX\Driver\Model\Hints;
 use Pentiminax\UX\Driver\Model\Tour;
 use Pentiminax\UX\Driver\Twig\UXDriverExtension;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -23,13 +25,11 @@ final class UXDriverExtensionTest extends TestCase
     #[Test]
     public function it_renders_stimulus_attributes_for_a_builder_tour(): void
     {
-        $extension = new UXDriverExtension(new StimulusHelper(new Environment(new ArrayLoader())), new TourBuilder());
-
         $tour = (new Tour('onboarding'))
             ->addStep('.header', 'Bienvenue')
             ->once();
 
-        $markup = (string) $extension->renderTour($tour);
+        $markup = (string) $this->extension()->renderTour($tour);
 
         $this->assertStringContainsString('data-controller="pentiminax--ux-driver--tour"', $markup);
         $this->assertStringContainsString('data-pentiminax--ux-driver--tour-id-value="onboarding"', $markup);
@@ -40,9 +40,7 @@ final class UXDriverExtensionTest extends TestCase
     #[Test]
     public function it_renders_stimulus_attributes_for_a_highlight(): void
     {
-        $extension = new UXDriverExtension(new StimulusHelper(new Environment(new ArrayLoader())), new TourBuilder());
-
-        $markup = (string) $extension->renderHighlight('.help-button', 'Aide', 'Cliquez ici pour commencer');
+        $markup = (string) $this->extension()->renderHighlight('.help-button', 'Aide', 'Cliquez ici pour commencer');
 
         $this->assertStringContainsString('data-controller="pentiminax--ux-driver--tour"', $markup);
         $this->assertStringContainsString('.help-button', $markup);
@@ -53,10 +51,41 @@ final class UXDriverExtensionTest extends TestCase
     #[Test]
     public function it_creates_tours_from_the_builder_factory(): void
     {
-        $extension = new UXDriverExtension(new StimulusHelper(new Environment(new ArrayLoader())), new TourBuilder());
-
-        $tour = $extension->createTour('dashboard');
+        $tour = $this->extension()->createTour('dashboard');
 
         $this->assertSame('dashboard', $tour->id);
+    }
+
+    #[Test]
+    public function it_renders_stimulus_attributes_for_a_hint_group(): void
+    {
+        $hints = (new Hints('help'))
+            ->addHint('.export', 'export', 'Exporter', 'Téléchargez vos données')
+            ->overlay();
+
+        $markup = (string) $this->extension()->renderHints($hints);
+
+        $this->assertStringContainsString('data-controller="pentiminax--ux-driver--hints"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--hints-id-value="help"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--hints-autostart-value="true"', $markup);
+        $this->assertStringContainsString('.export', $markup);
+        $this->assertStringContainsString('Exporter', $markup);
+    }
+
+    #[Test]
+    public function it_creates_hint_groups_from_the_builder_factory(): void
+    {
+        $hints = $this->extension()->createHints('help');
+
+        $this->assertSame('help', $hints->id);
+    }
+
+    private function extension(): UXDriverExtension
+    {
+        return new UXDriverExtension(
+            new StimulusHelper(new Environment(new ArrayLoader())),
+            new TourBuilder(),
+            new HintsBuilder(),
+        );
     }
 }

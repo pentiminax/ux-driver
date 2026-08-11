@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Tests\Twig\Components;
 
+use Pentiminax\UX\Driver\Twig\Components\Hint;
+use Pentiminax\UX\Driver\Twig\Components\Hints;
 use Pentiminax\UX\Driver\Twig\Components\Step;
 use Pentiminax\UX\Driver\Twig\Components\Tour;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -20,6 +22,8 @@ use Twig\Environment;
  */
 #[CoversClass(Tour::class)]
 #[CoversClass(Step::class)]
+#[CoversClass(Hints::class)]
+#[CoversClass(Hint::class)]
 final class ComponentRenderingTest extends KernelTestCase
 {
     #[Test]
@@ -172,6 +176,96 @@ final class ComponentRenderingTest extends KernelTestCase
             TWIG);
 
         $this->assertSame('<b>Header</b>', $this->attribute($markup, 'data-step-title'));
+    }
+
+    #[Test]
+    public function it_renders_the_hints_stimulus_values(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Hints id="help" :overlay="true" overlayColor="#0f172a" buttonText="Compris" />
+            TWIG);
+
+        $this->assertStringContainsString('data-controller="pentiminax--ux-driver--hints"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--hints-id-value="help"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--hints-autostart-value="true"', $markup);
+        $this->assertSame([
+            'buttonText'   => 'Compris',
+            'overlay'      => true,
+            'overlayColor' => '#0f172a',
+        ], json_decode($this->attribute($markup, 'data-pentiminax--ux-driver--hints-options-value'), true, flags: \JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
+    public function it_renders_nested_hints_as_controller_targets(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Hints id="help">
+                <twig:Driver:Hint hintId="export" title="Exporter" description="Téléchargez vos données" tag="button" class="export">Exporter</twig:Driver:Hint>
+                <twig:Driver:Hint hintId="filters" title="Filtres" side="right" align="end" />
+            </twig:Driver:Hints>
+            TWIG);
+
+        $this->assertSame(2, substr_count($markup, 'data-pentiminax--ux-driver--hints-target="hint"'));
+
+        $this->assertStringContainsString('<button  data-pentiminax--ux-driver--hints-target="hint" data-hint-side="bottom" data-hint-align="start" data-hint-id="export" data-hint-title="Exporter" data-hint-description="Téléchargez vos données" class="export">', $markup);
+        $this->assertStringContainsString('<div  data-pentiminax--ux-driver--hints-target="hint" data-hint-side="right" data-hint-align="end" data-hint-id="filters" data-hint-title="Filtres">', $markup);
+    }
+
+    #[Test]
+    public function it_renders_the_remaining_hint_options_as_a_json_config(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Hint title="Exporter" popoverClass="help-popover" :showButton="true" buttonText="Compris" :beacon="{side: 'top', animate: false}" :data="{tracking: 'export'}" />
+            TWIG);
+
+        $this->assertSame([
+            'beacon'  => ['side' => 'top', 'animate' => false],
+            'popover' => ['popoverClass' => 'help-popover', 'showButton' => true, 'buttonText' => 'Compris'],
+            'data'    => ['tracking' => 'export'],
+        ], json_decode($this->attribute($markup, 'data-hint-config'), true, flags: \JSON_THROW_ON_ERROR));
+    }
+
+    #[Test]
+    public function it_omits_the_hint_config_attribute_when_no_option_is_given(): void
+    {
+        $markup = $this->render('<twig:Driver:Hint title="Exporter" />');
+
+        $this->assertStringNotContainsString('data-hint-config', $markup);
+        $this->assertStringNotContainsString('data-hint-id', $markup);
+    }
+
+    #[Test]
+    public function it_escapes_hint_content_in_the_rendered_attributes(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            <twig:Driver:Hint title="<script>alert(1)</script>" buttonText="<img src=x onerror=alert(1)>" />
+            TWIG);
+
+        $this->assertStringNotContainsString('<script>', $markup);
+        $this->assertStringNotContainsString('onerror=alert(1)>', $markup);
+        $this->assertSame(
+            '&lt;img src=x onerror=alert(1)&gt;',
+            json_decode($this->attribute($markup, 'data-hint-config'), true, flags: \JSON_THROW_ON_ERROR)['popover']['buttonText'],
+        );
+        $this->assertSame(
+            '<script>alert(1)</script>',
+            html_entity_decode($this->attribute($markup, 'data-hint-title'), \ENT_QUOTES),
+        );
+    }
+
+    #[Test]
+    public function it_escapes_builder_hints_content(): void
+    {
+        $markup = $this->render(<<<'TWIG'
+            {% set hints = create_hints('help').addHint('.export', 'export', '<script>alert(1)</script>') %}
+            <div {{ ux_hints(hints) }}></div>
+            TWIG);
+
+        $this->assertStringNotContainsString('<script>', $markup);
+        $this->assertSame(
+            '&lt;script&gt;alert(1)&lt;/script&gt;',
+            json_decode($this->attribute($markup, 'data-pentiminax--ux-driver--hints-hints-value'), true, flags: \JSON_THROW_ON_ERROR)[0]['popover']['title'],
+        );
     }
 
     #[Test]

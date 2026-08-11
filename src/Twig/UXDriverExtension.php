@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Twig;
 
+use Pentiminax\UX\Driver\Builder\HintsBuilder;
 use Pentiminax\UX\Driver\Builder\TourBuilder;
+use Pentiminax\UX\Driver\Model\Hints;
 use Pentiminax\UX\Driver\Model\Step;
 use Pentiminax\UX\Driver\Model\Tour;
 use Symfony\UX\StimulusBundle\Helper\StimulusHelper;
@@ -17,6 +19,7 @@ final class UXDriverExtension extends AbstractExtension
     public function __construct(
         private readonly StimulusHelper $stimulus,
         private readonly TourBuilder $tourBuilder,
+        private readonly HintsBuilder $hintsBuilder,
     ) {
     }
 
@@ -26,6 +29,8 @@ final class UXDriverExtension extends AbstractExtension
             new TwigFunction('create_tour', $this->createTour(...)),
             new TwigFunction('ux_tour', $this->renderTour(...), ['is_safe' => ['html']]),
             new TwigFunction('ux_highlight', $this->renderHighlight(...), ['is_safe' => ['html']]),
+            new TwigFunction('create_hints', $this->createHints(...)),
+            new TwigFunction('ux_hints', $this->renderHints(...), ['is_safe' => ['html']]),
             new TwigFunction('ux_driver_html', $this->trustedHtml(...)),
         ];
     }
@@ -33,6 +38,21 @@ final class UXDriverExtension extends AbstractExtension
     public function createTour(string $id): Tour
     {
         return $this->tourBuilder->create($id);
+    }
+
+    public function createHints(string $id): Hints
+    {
+        return $this->hintsBuilder->create($id);
+    }
+
+    public function renderHints(Hints $hints, bool $autostart = true): Markup
+    {
+        return $this->renderControllerAttributes([
+            'id'        => $hints->id,
+            'hints'     => $hints->getHints(),
+            'options'   => $hints->getOptions(),
+            'autostart' => $autostart,
+        ], '@pentiminax/ux-driver/hints');
     }
 
     public function renderTour(Tour $tour): Markup
@@ -79,10 +99,10 @@ final class UXDriverExtension extends AbstractExtension
     /**
      * @param array<string, mixed> $values
      */
-    private function renderControllerAttributes(array $values): Markup
+    private function renderControllerAttributes(array $values, string $controller = '@pentiminax/ux-driver/tour'): Markup
     {
         $stimulusAttributes = $this->stimulus->createStimulusAttributes();
-        $stimulusAttributes->addController('@pentiminax/ux-driver/tour', $values);
+        $stimulusAttributes->addController($controller, $values);
 
         return new Markup((string) $stimulusAttributes, 'UTF-8');
     }
