@@ -5,7 +5,6 @@ import {
     type Driver,
     type DriveStep,
     type DriverHook,
-    type Popover,
 } from 'driver.js';
 import {alreadySeen, markSeen, resolveSteps} from './tour-utils.js';
 
@@ -80,10 +79,7 @@ export default class extends Controller {
         this.instance = driver(config);
         this.dispatch('connect', {detail: {driver: this.instance}, prefix: 'ux-driver'});
 
-        this.instance.highlight({
-            element: step.element,
-            popover: step.popover as Popover,
-        });
+        this.instance.highlight(step);
     }
 
     next(): void {

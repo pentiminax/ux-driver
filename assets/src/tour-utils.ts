@@ -1,4 +1,4 @@
-import type {DriveStep} from 'driver.js';
+import type {Alignment, DriveStep, Side} from 'driver.js';
 
 export function storageKey(id: string): string {
     return `ux-driver:seen:${id}`;
@@ -54,21 +54,46 @@ export function resolveSteps(builderSteps: DriveStep[], stepTargets: HTMLElement
             (left, right) =>
                 Number(left.dataset.stepOrder ?? 0) - Number(right.dataset.stepOrder ?? 0),
         )
-        .map((element) => ({
-            element,
-            popover: {
-                title: element.dataset.stepTitle,
-                description: element.dataset.stepDescription,
-                side: element.dataset.stepSide as DriveStep['popover'] extends infer P
-                    ? P extends {side?: infer S}
-                        ? S
-                        : never
-                    : never,
-                align: element.dataset.stepAlign as DriveStep['popover'] extends infer P
-                    ? P extends {align?: infer A}
-                        ? A
-                        : never
-                    : never,
-            },
-        }));
+        .map(declaredStep);
+}
+
+/**
+ * PHP already nested everything driver.js expects into `data-step-config`; only the target
+ * element and the escaped popover content travel as their own attributes.
+ */
+function declaredStep(element: HTMLElement): DriveStep {
+    const config = parseConfig(element.dataset.stepConfig);
+
+    const step: DriveStep = {
+        ...config,
+        popover: {
+            ...config.popover,
+            title: element.dataset.stepTitle,
+            description: element.dataset.stepDescription,
+            side: element.dataset.stepSide as Side,
+            align: element.dataset.stepAlign as Alignment,
+        },
+    };
+
+    // A centered step declares no target: driver.js then places the popover in the middle of
+    // the screen. Its `<template>` host must not become the highlighted element.
+    if (element.dataset.stepCentered !== 'true') {
+        step.element = element;
+    }
+
+    return step;
+}
+
+function parseConfig(json: string | undefined): DriveStep {
+    if (!json) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(json) as DriveStep;
+    } catch {
+        // A malformed payload would otherwise take the whole tour down; the step still plays
+        // with the options that do travel as attributes.
+        return {};
+    }
 }

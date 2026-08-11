@@ -36,14 +36,34 @@ export function resolveSteps(builderSteps, stepTargets) {
     return stepTargets
         .slice()
         .sort((left, right) => Number(left.dataset.stepOrder ?? 0) - Number(right.dataset.stepOrder ?? 0))
-        .map((element) => ({
-        element,
+        .map(declaredStep);
+}
+function declaredStep(element) {
+    const config = parseConfig(element.dataset.stepConfig);
+    const step = {
+        ...config,
         popover: {
+            ...config.popover,
             title: element.dataset.stepTitle,
             description: element.dataset.stepDescription,
             side: element.dataset.stepSide,
             align: element.dataset.stepAlign,
         },
-    }));
+    };
+    if (element.dataset.stepCentered !== 'true') {
+        step.element = element;
+    }
+    return step;
+}
+function parseConfig(json) {
+    if (!json) {
+        return {};
+    }
+    try {
+        return JSON.parse(json);
+    }
+    catch {
+        return {};
+    }
 }
 //# sourceMappingURL=tour-utils.js.map

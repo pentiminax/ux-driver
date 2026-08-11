@@ -39,10 +39,7 @@ class default_1 extends Controller {
         this.teardown();
         this.instance = driver(config);
         this.dispatch('connect', { detail: { driver: this.instance }, prefix: 'ux-driver' });
-        this.instance.highlight({
-            element: step.element,
-            popover: step.popover,
-        });
+        this.instance.highlight(step);
     }
     next() {
         this.instance?.moveNext();
