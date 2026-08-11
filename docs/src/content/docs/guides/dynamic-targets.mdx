@@ -1,0 +1,60 @@
+---
+title: Dynamic targets
+description: Handle Turbo Frames, modals, and missing elements in Tours and Hints.
+order: 8
+---
+
+# Dynamic targets
+
+Driver.js 1.8 supports waiting for Tour targets that appear after the Tour starts.
+
+## Wait for an element
+
+Use `waitForElement` on a step when a Turbo Frame or modal renders the target asynchronously:
+
+```twig
+<twig:Driver:Step
+    :order="2"
+    title="Invoice preview"
+    description="This appears after the modal opens"
+    tag="div"
+    id="invoice-preview"
+    :waitForElement="2000"
+/>
+```
+
+Builder mode passes the same option:
+
+```php
+$tour->addStep('#invoice-preview', 'Invoice preview', 'This appears after the modal opens', options: [
+    'waitForElement' => 2000,
+]);
+```
+
+## Skip missing targets
+
+Set `skipMissingElement` when the Tour should continue if the target never appears:
+
+```twig
+<twig:Driver:Step
+    :order="3"
+    title="Optional export"
+    description="Only admins see this control"
+    tag="button"
+    class="export"
+    :skipMissingElement="true"
+/>
+```
+
+Without `skipMissingElement`, a missing target can leave the Tour waiting on that step.
+
+## Refresh
+
+After Turbo, a modal animation, or a layout shift changes positions, call `refresh` on the active controller:
+
+```twig
+<button data-action="pentiminax--ux-driver--tour#refresh">Refresh tour</button>
+<button data-action="pentiminax--ux-driver--hints#refresh">Refresh hints</button>
+```
+
+Hints do not expose `waitForElement` or `skipMissingElement` through this bundle. Render Hint targets when the Hints controller connects, or call `show` after the target exists.

@@ -1,0 +1,47 @@
+---
+title: Authoring modes
+description: Choose between declarative Twig Components and builder-based Tours or Hints.
+order: 4
+---
+
+# Authoring modes
+
+UX Driver exposes the same serialized config through two authoring modes.
+
+## Twig Components
+
+Use components when the target markup lives in the same template:
+
+```twig
+<twig:Driver:Tour id="profile-tour">
+    <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+    <twig:Driver:Step :order="1" title="Profile" description="Keep your public details current">
+        <section class="profile-card">...</section>
+    </twig:Driver:Step>
+</twig:Driver:Tour>
+```
+
+`<twig:Driver:Step>` and `<twig:Driver:Hint>` render normal elements with `data-*` attributes. The controller reads those attributes only when no builder steps or hints were provided.
+
+## Builders
+
+Use `create_tour()` or `TourBuilder` when the list is data-driven or easier to compose away from the target markup:
+
+```php
+$tour = $this->tourBuilder->create('profile-tour')
+    ->addStep('.profile-card', 'Profile', 'Keep your public details current')
+    ->addStep('.security-card', 'Security', 'Review login settings', side: 'top');
+```
+
+Use `create_hints()` or `HintsBuilder` the same way:
+
+```twig
+{% set hints = create_hints('profile-help')
+    .addHint('.security-card', 'security', 'Security', 'Review login settings') %}
+
+<div {{ ux_hints(hints) }}></div>
+```
+
+## Choosing
+
+Components are clearer when authors can read the help next to the markup. Builders are clearer when selectors are stable and the flow is assembled in a controller, macro, or condition. Both paths validate through the same model classes before reaching Stimulus.

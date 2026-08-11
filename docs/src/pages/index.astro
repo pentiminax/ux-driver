@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import 'driver.js/dist/driver.css'
 
-const introductionUrl = `${import.meta.env.BASE_URL}getting-started/introduction/`
+const installationUrl = `${import.meta.env.BASE_URL}getting-started/installation/`
 ---
 
 <Layout title="UX Driver" description="Documentation for the UX Driver Symfony UX package.">
@@ -12,8 +12,8 @@ const introductionUrl = `${import.meta.env.BASE_URL}getting-started/introduction
       <h1>UX Driver</h1>
       <p>Symfony UX product tours, highlights, and contextual hints without handwritten JavaScript.</p>
       <div class="hero-actions">
-        <a class="button" href={introductionUrl}>Read docs</a>
-        <a class="button button-secondary" href={`${introductionUrl}#installation-placeholder`}>Get started</a>
+        <a class="button" href={installationUrl}>Read docs</a>
+        <a class="button button-secondary" href={`${installationUrl}#composer-install`}>Get started</a>
       </div>
       <pre><code>composer require pentiminax/ux-driver</code></pre>
     </div>
@@ -69,11 +69,15 @@ const introductionUrl = `${import.meta.env.BASE_URL}getting-started/introduction
 
   <section class="twig-first">
     <h2>Twig-first setup</h2>
-    <pre><code>{`<button {{ ux_driver_target('orders-filter') }}>
-  Filter orders
-</button>
+    <pre><code>{`<twig:Driver:Tour id="admin-orders">
+  <button data-action="pentiminax--ux-driver--tour#start">
+    Start tour
+  </button>
 
-{{ ux_driver_tour('admin-orders') }}`}</code></pre>
+  <twig:Driver:Step :order="1" title="Orders">
+    <h1>Orders</h1>
+  </twig:Driver:Step>
+</twig:Driver:Tour>`}</code></pre>
   </section>
 
   <script>

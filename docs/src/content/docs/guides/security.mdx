@@ -1,0 +1,38 @@
+---
+title: Security
+description: Understand default escaping and trusted HTML for Driver.js popover sinks.
+order: 9
+---
+
+# Security
+
+Driver.js writes popover content and button labels with `innerHTML`. UX Driver escapes plain strings before serializing them.
+
+## Escaped by default
+
+The bundle escapes:
+
+- Tour and Highlight `title`
+- Tour and Highlight `description`
+- Step `progressText`, `nextBtnText`, `prevBtnText`, and `doneBtnText`
+- Hint `title`
+- Hint `description`
+- Hint `buttonText`
+
+```twig
+<twig:Driver:Step title="<b>Billing</b>" description="<script>alert(1)</script>" />
+```
+
+That renders the literal text, not markup.
+
+## Trusted HTML
+
+Use `ux_driver_html()` only for markup you fully control:
+
+```twig
+<twig:Driver:Step :title="ux_driver_html('<strong>Billing</strong>')" />
+```
+
+PHP can pass a `Twig\Markup` instance for the same result.
+
+Never pass user input to `ux_driver_html()`. If your app accepts rich text from users, sanitize it before marking it trusted. Sanitizer choice and policy belong to the application.

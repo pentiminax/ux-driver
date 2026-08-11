@@ -1,0 +1,52 @@
+---
+title: Installation
+description: Install UX Driver in a Symfony app and load the Driver.js styles.
+order: 1
+---
+
+# Installation
+
+UX Driver adds Driver.js tours, Highlights, and Hints to Symfony through Twig Components, Twig functions, and Stimulus controllers.
+
+## Requirements
+
+| Dependency | Range |
+| --- | --- |
+| PHP | `>=8.2` |
+| Symfony | `^7.0` or `^8.0` |
+| StimulusBundle | `^2.0` or `^3.0` |
+| TwigComponent | `^2.0` or `^3.0` |
+| Twig | `^3.8` |
+
+## Composer install
+
+```bash
+composer require pentiminax/ux-driver
+```
+
+## Stylesheets
+
+With AssetMapper, no extra import is needed. The bundle declares `driver.js/dist/driver.css` and `driver.js/dist/hints.css` as StimulusBundle `autoimport` assets, and the same paths appear in the package importmap metadata so StimulusBundle can resolve them.
+
+With Webpack Encore, import both CSS files once in your app entry:
+
+```js
+import 'driver.js/dist/driver.css'
+import 'driver.js/dist/hints.css'
+```
+
+## Shortest first step
+
+Put a Tour beside the markup it explains:
+
+```twig
+<twig:Driver:Tour id="welcome">
+    <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+
+    <twig:Driver:Step :order="1" title="Dashboard" description="This is your daily overview">
+        <h1>Dashboard</h1>
+    </twig:Driver:Step>
+</twig:Driver:Tour>
+```
+
+The button starts the `pentiminax--ux-driver--tour` controller. The component renders the controller values and step target attributes.

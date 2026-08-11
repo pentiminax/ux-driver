@@ -10,7 +10,7 @@ interface Props {
 const { title, description } = Astro.props
 const canonicalPath = Astro.url.pathname
 const homeUrl = withBase()
-const introUrl = withBase('getting-started/introduction/')
+const installationUrl = withBase('getting-started/installation/')
 const repoUrl = 'https://github.com/pentiminax/ux-driver'
 ---
 
@@ -45,8 +45,8 @@ const repoUrl = 'https://github.com/pentiminax/ux-driver'
         <span>UX Driver</span>
       </a>
       <nav class="top-nav" aria-label="Primary navigation">
-        <a href={introUrl}>Docs</a>
-        <a href={`${introUrl}#installation-placeholder`}>Install</a>
+        <a href={installationUrl}>Docs</a>
+        <a href={`${installationUrl}#composer-install`}>Install</a>
       </nav>
       <button class="search-trigger" type="button" data-search-trigger aria-label="Open search">
         Search <kbd>⌘K</kbd>

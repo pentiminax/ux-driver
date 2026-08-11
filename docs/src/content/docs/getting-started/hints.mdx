@@ -1,0 +1,47 @@
+---
+title: Hints
+description: Add contextual beacons with Twig Components or the hints builder.
+order: 3
+---
+
+# Hints
+
+Hints show beacons next to controls and let users open contextual help when they need it.
+
+```twig
+<twig:Driver:Hints id="orders-help" buttonText="Done" :overlay="true">
+    <twig:Driver:Hint hintId="filters" title="Filters" description="Save time by narrowing the order list first">
+        <button type="button">Filters</button>
+    </twig:Driver:Hint>
+
+    <twig:Driver:Hint hintId="export" title="Export" description="Download the current view as a CSV" side="left">
+        <button type="button">Export</button>
+    </twig:Driver:Hint>
+</twig:Driver:Hints>
+```
+
+Hints autostart by default. Set `:autostart="false"` and call `pentiminax--ux-driver--hints#show` when beacons should appear later.
+
+## Actions
+
+```twig
+<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
+<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
+<button data-action="pentiminax--ux-driver--hints#open"
+        data-pentiminax--ux-driver--hints-hint-id-param="filters">Open filters hint</button>
+<button data-action="pentiminax--ux-driver--hints#dismiss"
+        data-pentiminax--ux-driver--hints-hint-id-param="filters">Dismiss filters hint</button>
+```
+
+`close` closes the open popover. `dismiss` hides one beacon through Driver.js. This bundle does not persist dismissed Hints across page loads.
+
+## Builder alternative
+
+```twig
+{% set hints = create_hints('orders-help')
+    .addHint('.filters', 'filters', 'Filters', 'Save time by narrowing the list first')
+    .addHint('.export', 'export', 'Export', 'Download the current view as a CSV', 'left')
+    .buttonText('Done') %}
+
+<div {{ ux_hints(hints) }}></div>
+```

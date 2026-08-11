@@ -1,0 +1,51 @@
+---
+title: Stimulus
+description: Exact controller identifiers, actions, events, cancelability, and detail shapes.
+order: 13
+---
+
+# Stimulus reference
+
+## Controllers
+
+| Controller | Use |
+| --- | --- |
+| `pentiminax--ux-driver--tour` | Tours and Highlights |
+| `pentiminax--ux-driver--hints` | Hints |
+
+## Tour actions
+
+| Action | Effect |
+| --- | --- |
+| `start` | Drives the resolved steps; accepts optional `index` param |
+| `highlight` | Highlights the first resolved step |
+| `next` | Calls `moveNext()` |
+| `previous` | Calls `movePrevious()` |
+| `moveTo` | Calls `moveTo(index)` when `index` is an integer |
+| `refresh` | Calls `refresh()` |
+| `destroy` | Destroys the Driver.js instance |
+
+## Hints actions
+
+| Action | Effect |
+| --- | --- |
+| `show` | Resolves hints and calls `show()` |
+| `hide` | Hides the Hints instance |
+| `open` | Calls `open(hintId)` |
+| `close` | Calls `close()` |
+| `dismiss` | Calls `dismiss(hintId)` |
+| `restore` | Calls `restore(hintId)` |
+| `restoreAll` | Restores all current hints by id or index |
+| `refresh` | Calls `refresh()` |
+
+## Events
+
+Tour click events are cancelable: `ux-driver:next`, `ux-driver:previous`, `ux-driver:close`, `ux-driver:done`, and `ux-driver:destroy-started`.
+
+Tour observe events are not cancelable: `ux-driver:pre-connect`, `ux-driver:connect`, `ux-driver:empty`, `ux-driver:highlight-started`, `ux-driver:highlighted`, `ux-driver:deselected`, and `ux-driver:destroyed`.
+
+Tour lifecycle detail is `{tourId, index, step, element, driver}`. Setup detail is `{config}` or `{driver}`; empty detail is `{id}`.
+
+Hints events are not cancelable: `ux-driver:hints-pre-connect`, `ux-driver:hints-connect`, `ux-driver:empty`, `ux-driver:hint-open`, `ux-driver:hint-dismiss`, and `ux-driver:hint-button-click`.
+
+Hint lifecycle detail is `{groupId, hintId, hint, element, data, hints}`. Setup detail is `{config}` or `{hints}`; empty detail is `{id}`.

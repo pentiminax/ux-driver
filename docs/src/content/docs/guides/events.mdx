@@ -1,0 +1,58 @@
+---
+title: Events
+description: Listen to UX Driver lifecycle events from application JavaScript.
+order: 6
+---
+
+# Events
+
+UX Driver bridges Driver.js callbacks into DOM events so server-rendered Tours and Hints stay observable.
+
+## Tour events
+
+Tour setup events:
+
+| Event | Cancelable | Detail |
+| --- | --- | --- |
+| `ux-driver:pre-connect` | no | `{config}` |
+| `ux-driver:connect` | no | `{driver}` |
+| `ux-driver:empty` | no | `{id}` |
+
+Tour lifecycle events:
+
+| Event | Cancelable | Detail |
+| --- | --- | --- |
+| `ux-driver:highlight-started` | no | `{tourId, index, step, element, driver}` |
+| `ux-driver:highlighted` | no | `{tourId, index, step, element, driver}` |
+| `ux-driver:deselected` | no | `{tourId, index, step, element, driver}` |
+| `ux-driver:destroyed` | no | `{tourId, index, step, element, driver}` |
+| `ux-driver:next` | yes | `{tourId, index, step, element, driver}` |
+| `ux-driver:previous` | yes | `{tourId, index, step, element, driver}` |
+| `ux-driver:close` | yes | `{tourId, index, step, element, driver}` |
+| `ux-driver:done` | yes | `{tourId, index, step, element, driver}` |
+| `ux-driver:destroy-started` | yes | `{tourId, index, step, element, driver}` |
+
+The cancelable events replace Driver.js click hooks in the controller. If a listener calls `preventDefault()`, UX Driver does not run the default `moveNext()`, `movePrevious()`, `destroy()`, or completion action.
+
+## Hints events
+
+| Event | Cancelable | Detail |
+| --- | --- | --- |
+| `ux-driver:hints-pre-connect` | no | `{config}` |
+| `ux-driver:hints-connect` | no | `{hints}` |
+| `ux-driver:empty` | no | `{id}` |
+| `ux-driver:hint-open` | no | `{groupId, hintId, hint, element, data, hints}` |
+| `ux-driver:hint-dismiss` | no | `{groupId, hintId, hint, element, data, hints}` |
+| `ux-driver:hint-button-click` | no | `{groupId, hintId, hint, element, data, hints}` |
+
+Hint events do not cancel Driver.js behavior.
+
+## Listener example
+
+```js
+document.addEventListener('ux-driver:next', (event) => {
+  if (!document.querySelector('form')?.reportValidity()) {
+    event.preventDefault()
+  }
+})
+```

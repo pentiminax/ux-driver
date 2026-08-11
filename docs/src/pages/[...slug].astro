@@ -7,7 +7,7 @@ import TabItem from '../components/TabItem.astro'
 import Table from '../components/Table.astro'
 import Tabs from '../components/Tabs.astro'
 import Layout from '../layouts/Layout.astro'
-import { docsNav, withBase } from '../nav'
+import { docsNav, docsNavSections, withBase } from '../nav'
 
 export async function getStaticPaths() {
   const entries = await getCollection('docs')
@@ -31,21 +31,30 @@ const editUrl = `https://github.com/pentiminax/ux-driver/edit/main/docs/src/cont
     <details class="mobile-docs-nav">
       <summary>Docs navigation</summary>
       <nav aria-label="Documentation navigation">
-        {docsNav.map((item) => (
-          <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
-            {item.title}
-          </a>
+        {docsNavSections.map((section) => (
+          <>
+            <p>{section.section}</p>
+            {section.items.map((item) => (
+              <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
+                {item.title}
+              </a>
+            ))}
+          </>
         ))}
       </nav>
     </details>
 
     <aside class="doc-sidebar">
       <nav aria-label="Documentation navigation">
-        <p>{docsNav[0]?.section}</p>
-        {docsNav.map((item) => (
-          <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
-            {item.title}
-          </a>
+        {docsNavSections.map((section) => (
+          <>
+            <p>{section.section}</p>
+            {section.items.map((item) => (
+              <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
+                {item.title}
+              </a>
+            ))}
+          </>
         ))}
       </nav>
     </aside>

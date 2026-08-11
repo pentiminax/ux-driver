@@ -1,0 +1,68 @@
+---
+title: Tour
+description: Reference for Tour options, methods, and Twig component props.
+order: 10
+---
+
+# Tour reference
+
+`Tour` represents a Driver.js walkthrough. The constructor and builder require a stable `id`.
+
+## Create
+
+```twig
+{% set tour = create_tour('onboarding') %}
+```
+
+```php
+$tour = $tourBuilder->create('onboarding');
+```
+
+```twig
+<twig:Driver:Tour id="onboarding">
+    ...
+</twig:Driver:Tour>
+```
+
+## Options
+
+| Option or method | Type | Default |
+| --- | --- | --- |
+| `showProgress` / `showProgress()` | `bool` | bundle `true`; Driver.js default `false` |
+| `animate` / `animate()` | `bool` | component `true`; Driver.js default `true` |
+| `smoothScroll` / `smoothScroll()` | `bool` | component `false`; Driver.js default `false` |
+| `allowClose` / `allowClose()` | `bool` | component `true`; Driver.js default `true` |
+| `allowScroll` / `allowScroll()` | `bool` | Driver.js default `false` |
+| `allowKeyboardControl` / `allowKeyboardControl()` | `bool` | Driver.js default `true` |
+| `disableActiveInteraction` / `disableActiveInteraction()` | `bool` | Driver.js default `false` |
+| `duration` / `duration()` | `int` milliseconds | Driver.js default `500` |
+| `overlayColor` / `overlayColor()` | `string` | Driver.js default `#000` |
+| `overlayOpacity` / `overlayOpacity()` | `float` | Driver.js default `0.7` |
+| `overlayClickBehavior` / `overlayClickBehavior()` | `close` or `nextStep` | Driver.js default `close` |
+| `stagePadding` / `stagePadding()` | `int` | Driver.js default `10` |
+| `stageRadius` / `stageRadius()` | `int` | Driver.js default `5` |
+| `popoverClass` / `popoverClass()` | `string` | none |
+| `popoverOffset` / `popoverOffset()` | `int` | Driver.js default `10` |
+| `showButtons` / `showButtons()` | list of `next`, `previous`, `close` | Driver.js default all |
+| `disableButtons` / `disableButtons()` | list of `next`, `previous`, `close` | Driver.js default none |
+| `progressText` / `progressText()` | `string` or trusted markup | Driver.js default `{{current}} of {{total}}` |
+| `nextBtnText` / `nextBtnText()` | `string` or trusted markup | Driver.js default `Next &rarr;` |
+| `prevBtnText` / `prevBtnText()` | `string` or trusted markup | Driver.js default `&larr; Previous` |
+| `doneBtnText` / `doneBtnText()` | `string` or trusted markup | Driver.js default `Done` |
+| `once` / `once()` | `bool` | bundle `false`; not a Driver.js option |
+| `autostart` | `bool` | bundle `false`; component prop only |
+
+Callback options are not exposed because PHP and Twig cannot serialize JavaScript functions. Use Stimulus events instead.
+
+## Methods
+
+| Method | Description |
+| --- | --- |
+| `addStep()` | Appends a Step to the Tour |
+| `getSteps()` | Returns serialized Driver.js steps |
+| `getOptions()` | Returns serialized Driver.js config |
+| `isOnce()` | Returns the bundle persistence flag |
+
+`ux_tour(tour)` renders controller attributes with `autostart=false`.
+
+`ux_highlight(element, title, description, side, align, options)` renders a one-step Tour for the `highlight` action.

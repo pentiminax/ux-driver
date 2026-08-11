@@ -1,0 +1,60 @@
+---
+title: Styling and localization
+description: Customize visible text and CSS for Driver.js popovers and Hints.
+order: 7
+---
+
+# Styling and localization
+
+UX Driver serializes Driver.js text options from PHP and Twig.
+
+## Text
+
+```twig
+<twig:Driver:Tour
+    id="checkout-tour"
+    progressText="{{ '{{current}}' }} / {{ '{{total}}' }}"
+    nextBtnText="Next"
+    prevBtnText="Back"
+    doneBtnText="Done"
+>
+    ...
+</twig:Driver:Tour>
+```
+
+For Hints, use `buttonText`:
+
+```twig
+<twig:Driver:Hints id="checkout-help" buttonText="Done">
+    ...
+</twig:Driver:Hints>
+```
+
+These text values are escaped by default because Driver.js writes them with `innerHTML`.
+
+## Popover CSS
+
+Use `popoverClass` to add a class to the Driver.js popover wrapper:
+
+```twig
+<twig:Driver:Tour id="checkout-tour" popoverClass="checkout-popover">
+    ...
+</twig:Driver:Tour>
+```
+
+```css
+.checkout-popover {
+  --driver-popover-bg: #111827;
+  --driver-popover-text-color: #f9fafb;
+  --driver-popover-title-color: #ffffff;
+  --driver-popover-progress-text-color: #d1d5db;
+}
+```
+
+Driver.js also emits stable classes such as `.driver-popover`, `.driver-popover-title`, `.driver-popover-description`, `.driver-popover-footer`, `.driver-overlay`, and `.driver-active-element`.
+
+## Motion and accessibility
+
+Set `:animate="false"` when you want a no-animation Tour. The bundle does not automatically read `prefers-reduced-motion`; keep that decision in your app when needed.
+
+Keep titles short, button text explicit, and do not rely on color alone in custom themes.

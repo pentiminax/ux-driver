@@ -1,0 +1,37 @@
+---
+title: Compatibility
+description: Supported PHP, Symfony, Driver.js, Stimulus, TwigComponent, and Node ranges.
+order: 14
+---
+
+# Compatibility
+
+| Dependency | Supported range |
+| --- | --- |
+| PHP | `>=8.2` |
+| Symfony components | `^7.0` or `^8.0` |
+| Symfony StimulusBundle | `^2.0` or `^3.0` |
+| Symfony UX TwigComponent | `^2.0` or `^3.0` |
+| Twig | `^3.8` |
+| `@hotwired/stimulus` | `^3.0.0` |
+| `driver.js` | `^1.8.0` |
+| Node.js for docs/assets tooling | CI uses `22`; no package engine is declared |
+
+The PHP ranges come from `composer.json`. The browser package ranges come from `assets/package.json`, the docs package uses Driver.js `^1.8.0` for the live demo, and CI configures Node 22 for JavaScript checks.
+
+## Why Driver.js 1.8 is the floor
+
+UX Driver exposes `advanceOnClick` and `waitForElement`, which require Driver.js 1.8. The package also uses the separate `driver.js/hints` entrypoint for Hints.
+
+The package declares `driver.js`, `driver.js/hints`, `driver.js/dist/driver.css`, and `driver.js/dist/hints.css` at `^1.8.0` in Symfony importmap metadata, and declares `driver.js` `^1.8.0` as a peer dependency for npm and Encore users.
+
+## AssetMapper and Encore
+
+AssetMapper users get the Driver.js CSS through StimulusBundle `autoimport`.
+
+Webpack Encore users must import the styles once:
+
+```js
+import 'driver.js/dist/driver.css'
+import 'driver.js/dist/hints.css'
+```
