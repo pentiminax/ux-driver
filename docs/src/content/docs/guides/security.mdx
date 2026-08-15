@@ -1,38 +1,77 @@
 ---
 title: Security
-description: Understand default escaping and trusted HTML for Driver.js popover sinks.
-order: 9
+description: How UX Driver escapes popover content, and how to opt out safely.
+order: 10
 ---
 
-# Security
+import Aside from '../../../components/Aside.astro'
 
-Driver.js writes popover content and button labels with `innerHTML`. UX Driver escapes plain strings before serializing them.
+Driver.js writes popover content and button labels with `innerHTML`. Left alone, that makes every title and
+description an HTML injection sink. UX Driver escapes plain strings before serializing them, so the default
+path is safe even when the text comes from the database.
 
 ## Escaped by default
 
-The bundle escapes:
+| Object | Escaped options |
+| --- | --- |
+| Tour | `title`, `description`, `progressText`, `nextBtnText`, `prevBtnText`, `doneBtnText` |
+| Step | `title`, `description`, `progressText`, `nextBtnText`, `prevBtnText`, `doneBtnText` |
+| Highlight | `title`, `description`, and the Step options above |
+| Hints | `buttonText` |
+| Hint | `title`, `description` |
 
-- Tour and Highlight `title`
-- Tour and Highlight `description`
-- Step `progressText`, `nextBtnText`, `prevBtnText`, and `doneBtnText`
-- Hint `title`
-- Hint `description`
-- Hint `buttonText`
+The label options exist at both levels — a Tour sets them for the whole walkthrough, a Step overrides them
+for itself — and both are escaped identically.
 
 ```twig
 <twig:Driver:Step title="<b>Billing</b>" description="<script>alert(1)</script>" />
 ```
 
-That renders the literal text, not markup.
+That popover shows the literal characters. No bold text, no script.
 
 ## Trusted HTML
 
-Use `ux_driver_html()` only for markup you fully control:
+When markup is the point — a `<strong>`, a `<code>`, a line break — `ux_driver_html()` marks a string as
+trusted and skips escaping:
 
 ```twig
 <twig:Driver:Step :title="ux_driver_html('<strong>Billing</strong>')" />
 ```
 
-PHP can pass a `Twig\Markup` instance for the same result.
+In PHP, passing a `Twig\Markup` instance does the same thing.
 
-Never pass user input to `ux_driver_html()`. If your app accepts rich text from users, sanitize it before marking it trusted. Sanitizer choice and policy belong to the application.
+<Aside type="danger" title="Never pass user input to `ux_driver_html()`">
+The function is not a sanitizer. It is an assertion that you already know the string is safe. A value that
+reached it from a form field, a URL parameter, a CMS field, or an API response is an XSS hole with extra
+steps.
+</Aside>
+
+## Sanitizing rich text
+
+If popover content genuinely has to come from user-authored rich text, sanitize it first with
+[`symfony/html-sanitizer`](https://symfony.com/doc/current/html_sanitizer.html) and mark the result
+trusted:
+
+```php
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
+use Twig\Markup;
+
+public function __construct(private readonly HtmlSanitizerInterface $htmlSanitizer)
+{
+}
+
+public function step(string $userHtml): Markup
+{
+    return new Markup($this->htmlSanitizer->sanitize($userHtml), 'UTF-8');
+}
+```
+
+Configure the sanitizer's allowed elements to the smallest set the popover needs — inline formatting is
+usually enough, and a popover has no business rendering `<iframe>` or `<form>`. The policy is the
+application's to choose; the bundle only decides whether to escape.
+
+## Related
+
+- [Styling and localization](/guides/styling-and-localization/) — the label options above, and how to
+  translate them.
+- [Highlights](/guides/highlights/) — same escaping rules, one Step.

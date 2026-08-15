@@ -1,0 +1,38 @@
+---
+import Icon from '../components/Icon.astro'
+import Layout from '../layouts/Layout.astro'
+import { sections, withBase } from '../nav'
+---
+
+<Layout
+  title="Page not found | UX Driver"
+  description="This UX Driver documentation page does not exist."
+  wide
+>
+  <section class="not-found">
+    <p class="not-found-code">404</p>
+    <h1>This page moved or never existed</h1>
+    <p class="not-found-lede">
+      The documentation was reorganised into three sections. Start from one of them, or search for
+      the option you were looking for.
+    </p>
+
+    <p>
+      <button type="button" class="button" data-search-trigger>
+        <Icon name="search" size={18} />
+        Search the documentation
+      </button>
+    </p>
+
+    <nav class="section-jump" aria-label="Documentation sections">
+      {
+        sections.map((section) => (
+          <a href={withBase(`${section.id}/`)}>
+            <span class="section-jump-title">{section.title}</span>
+            <span class="section-jump-description">{section.description}</span>
+          </a>
+        ))
+      }
+    </nav>
+  </section>
+</Layout>

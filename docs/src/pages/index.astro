@@ -1,76 +1,130 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import Icon from '../components/Icon.astro'
+import { getDocsNavSections, withBase } from '../nav'
 import 'driver.js/dist/driver.css'
 import 'driver.js/dist/hints.css'
 
-const installationUrl = `${import.meta.env.BASE_URL}getting-started/installation/`
+const groups = await getDocsNavSections()
+
+const modes = [
+  {
+    name: 'Tour',
+    href: withBase('getting-started/first-tour/'),
+    description: 'A numbered sequence of Steps. Driver.js handles the overlay, the focus ring, and the popover; you write Twig.',
+  },
+  {
+    name: 'Highlight',
+    href: withBase('guides/highlights/'),
+    description: 'One element, one popover, no sequence. The right shape for announcing a single new control.',
+  },
+  {
+    name: 'Hint',
+    href: withBase('getting-started/hints/'),
+    description: 'Beacons that stay on the page after onboarding ends, for the controls people keep asking about.',
+  },
+]
 ---
 
-<Layout title="UX Driver" description="Documentation for the UX Driver Symfony UX package.">
-  <section class="home-hero">
-    <div class="home-copy">
-      <p class="eyebrow">Symfony UX package</p>
-      <h1>UX Driver</h1>
-      <p>Symfony UX product tours, highlights, and contextual hints without handwritten JavaScript.</p>
+<Layout
+  title="UX Driver — Driver.js tours for Symfony"
+  description="A Symfony bundle that renders Driver.js product tours, highlights, and hints from Twig — no handwritten JavaScript."
+  wide
+>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>Product tours that live in your Twig templates.</h1>
+      <p class="hero-lede">
+        UX Driver wires <a href="https://driverjs.com">Driver.js</a> into Symfony. Declare a Tour, a Highlight, or a set of
+        Hints next to the markup they point at — the bundle ships the Stimulus controller, the assets, and the events.
+      </p>
+
       <div class="hero-actions">
-        <a class="button" href={installationUrl}>Read docs</a>
-        <a class="button button-secondary" href={`${installationUrl}#composer-install`}>Get started</a>
+        <a class="button" href={withBase('getting-started/installation/')}>
+          Install the bundle
+          <Icon name="arrow-right" size={16} />
+        </a>
+        <button class="button button-secondary" type="button" data-search-trigger>
+          <Icon name="search" size={16} />
+          Search the docs
+        </button>
       </div>
-      <pre><code>composer require pentiminax/ux-driver</code></pre>
+
+      <pre class="hero-install"><code>composer require pentiminax/ux-driver</code></pre>
     </div>
 
-    <div class="admin-demo" aria-label="Interactive Symfony admin tour demo">
-      <div class="demo-toolbar">
+    <div class="demo" aria-label="Interactive Driver.js demo on a mock Symfony admin">
+      <div class="demo-toolbar" role="group" aria-label="Demo modes">
         <button type="button" data-demo-mode="tour">Start tour</button>
         <button type="button" data-demo-mode="highlight">Highlight</button>
         <button type="button" data-demo-mode="hints">Show hints</button>
       </div>
-      <div class="admin-scene">
-        <div class="admin-rail" data-demo-target="nav">
+
+      <div class="demo-scene">
+        <div class="demo-rail" data-demo-target="nav">
           <strong>Admin</strong>
           <span>Orders</span>
           <span>Customers</span>
           <span>Catalog</span>
         </div>
-        <div class="admin-main">
-          <div class="admin-header" data-demo-target="filters">
+        <div class="demo-main">
+          <div class="demo-header" data-demo-target="filters">
             <span>Orders</span>
-            <button type="button">Today</button>
-            <button type="button">Export</button>
+            <button type="button" tabindex="-1">Today</button>
+            <button type="button" tabindex="-1">Export</button>
           </div>
-          <div class="admin-grid" data-demo-target="table">
+          <div class="demo-grid" data-demo-target="table">
             <div><strong>#1048</strong><span>Paid</span><span>€128.00</span></div>
             <div><strong>#1049</strong><span>Review</span><span>€64.50</span></div>
             <div><strong>#1050</strong><span>Shipped</span><span>€312.20</span></div>
           </div>
-          <div class="admin-panel" data-demo-target="insight">
+          <div class="demo-panel" data-demo-target="insight">
             <strong>Contextual hint</strong>
-            <p>Point new operators to the exact control they need.</p>
+            <p>Point new operators at the exact control they need.</p>
           </div>
         </div>
       </div>
-      <noscript>The interactive demo needs JavaScript, but UX Driver still renders regular Symfony and Twig content first.</noscript>
+
+      <noscript>
+        <p class="demo-noscript">
+          The interactive demo needs JavaScript. UX Driver itself renders server-side Twig first and enhances it afterwards.
+        </p>
+      </noscript>
     </div>
   </section>
 
-  <section class="home-details" aria-label="UX Driver modes">
-    <article>
-      <h2>Tour</h2>
-      <p>Sequence onboarding steps through Twig attributes while Driver.js handles focus and popovers.</p>
-    </article>
-    <article>
-      <h2>Highlight</h2>
-      <p>Draw attention to one Symfony admin action without building custom overlay scripts.</p>
-    </article>
-    <article>
-      <h2>Hints</h2>
-      <p>Attach lightweight beacons to controls that need contextual help.</p>
-    </article>
+  <section class="home-section" aria-labelledby="modes-heading">
+    <h2 id="modes-heading">Three shapes, one bundle</h2>
+    <div class="mode-cards">
+      {
+        modes.map((mode) => (
+          <a class="mode-card" href={mode.href}>
+            <h3>{mode.name}</h3>
+            <p>{mode.description}</p>
+            <span class="mode-card-cue">
+              Read the guide
+              <Icon name="arrow-right" size={15} />
+            </span>
+          </a>
+        ))
+      }
+    </div>
   </section>
 
-  <section class="twig-first">
-    <h2>Twig-first setup</h2>
-    <pre><code>{`<twig:Driver:Tour id="admin-orders">
+  <section class="home-section" aria-labelledby="twig-heading">
+    <div class="twig-first">
+      <div class="twig-first-copy">
+        <h2 id="twig-heading">The Tour is markup, not a script</h2>
+        <p>
+          Steps are declared where the elements are. The Stimulus controller reads them at connect time, so a Tour authored
+          in a Twig include or a Live Component keeps working when the DOM changes.
+        </p>
+        <p>
+          Prefer to build Tours in PHP? The <a href={withBase('guides/authoring-modes/')}>authoring modes guide</a> covers
+          the builder API and when each mode fits.
+        </p>
+      </div>
+      <pre><code>{`<twig:Driver:Tour id="admin-orders">
   <button data-action="pentiminax--ux-driver--tour#start">
     Start tour
   </button>
@@ -79,6 +133,31 @@ const installationUrl = `${import.meta.env.BASE_URL}getting-started/installation
     <h1>Orders</h1>
   </twig:Driver:Step>
 </twig:Driver:Tour>`}</code></pre>
+    </div>
+  </section>
+
+  <section class="home-section" aria-labelledby="docs-heading">
+    <h2 id="docs-heading">Find your way in</h2>
+    <div class="home-sections">
+      {
+        groups.map((group) => (
+          <div class="home-section-card">
+            <a class="home-section-title" href={withBase(`${group.section.id}/`)}>
+              {group.section.title}
+              <Icon name="arrow-right" size={16} />
+            </a>
+            <p>{group.section.description}</p>
+            <ul>
+              {group.items.slice(0, 4).map((item) => (
+                <li>
+                  <a href={withBase(`${item.slug}/`)}>{item.navTitle}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
   </section>
 
   <script>

@@ -1,43 +1,54 @@
 ---
 title: Installation
-description: Install UX Driver in a Symfony app and load the Driver.js styles.
+description: Install UX Driver in a Symfony application and load the Driver.js stylesheets.
 order: 1
 ---
 
-# Installation
+import Aside from '../../../components/Aside.astro'
+import Steps from '../../../components/Steps.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
-UX Driver adds Driver.js tours, Highlights, and Hints to Symfony through Twig Components, Twig functions, and Stimulus controllers.
+UX Driver is a Symfony bundle that renders [Driver.js](https://driverjs.com) Tours, Highlights, and Hints
+from Twig. It ships Twig Components, Twig functions, and two Stimulus controllers, so nothing about a Tour
+has to be written in application JavaScript.
 
-## Requirements
+It needs PHP 8.2+, Symfony 7 or 8, and Driver.js 1.8+. The full matrix lives in
+[Compatibility](/reference/compatibility/).
 
-| Dependency | Range |
-| --- | --- |
-| PHP | `>=8.2` |
-| Symfony | `^7.0` or `^8.0` |
-| StimulusBundle | `^2.0` or `^3.0` |
-| TwigComponent | `^2.0` or `^3.0` |
-| Twig | `^3.8` |
+## Install
 
-## Composer install
+<Steps>
+<li>
+Require the bundle. Symfony Flex enables it for you.
 
 ```bash
 composer require pentiminax/ux-driver
 ```
+</li>
 
-## Stylesheets
+<li>
+Load the Driver.js stylesheets — the bundle ships the behavior, Driver.js ships the looks.
 
-With AssetMapper, no extra import is needed. The bundle declares `driver.js/dist/driver.css` and `driver.js/dist/hints.css` as StimulusBundle `autoimport` assets, and the same paths appear in the package importmap metadata so StimulusBundle can resolve them.
+<Tabs>
+<TabItem label="AssetMapper">
+Nothing to do. The bundle declares `driver.js/dist/driver.css` and `driver.js/dist/hints.css` as
+StimulusBundle `autoimport` assets, and the same paths are listed in the importmap metadata.
+</TabItem>
 
-With Webpack Encore, import both CSS files once in your app entry:
+<TabItem label="Webpack Encore">
+Import both files once, in your application entrypoint:
 
 ```js
 import 'driver.js/dist/driver.css'
 import 'driver.js/dist/hints.css'
 ```
+</TabItem>
+</Tabs>
+</li>
 
-## Shortest first step
-
-Put a Tour beside the markup it explains:
+<li>
+Put a Tour next to the markup it explains.
 
 ```twig
 <twig:Driver:Tour id="welcome">
@@ -48,5 +59,19 @@ Put a Tour beside the markup it explains:
     </twig:Driver:Step>
 </twig:Driver:Tour>
 ```
+</li>
+</Steps>
 
-The button starts the `pentiminax--ux-driver--tour` controller. The component renders the controller values and step target attributes.
+The `<twig:Driver:Tour>` component renders the `pentiminax--ux-driver--tour` controller values, and each
+`<twig:Driver:Step>` renders its host element with the target attributes the controller reads on start.
+
+<Aside type="note" title="Tours wait to be asked">
+A Tour does not start on its own: `autostart` defaults to `false`, so without the button above nothing
+happens. Hints are the opposite — see [Control and persistence](/guides/control-and-persistence/).
+</Aside>
+
+## Where to go next
+
+- [First Tour](/getting-started/first-tour/) — a complete three-Step Tour, and the same Tour written with the builder.
+- [Hints](/getting-started/hints/) — beacons that stay on the page after onboarding.
+- [Authoring modes](/guides/authoring-modes/) — when to reach for components and when for builders.

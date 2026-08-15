@@ -1,0 +1,28 @@
+---
+import Icon from './Icon.astro'
+import { withBase } from '../nav'
+
+interface Props {
+  trail: { label: string; href?: string }[]
+}
+
+const { trail } = Astro.props
+---
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <ol>
+    <li><a href={withBase()}>Docs</a></li>
+    {
+      trail.map((crumb, index) => (
+        <li>
+          <Icon name="chevron-right" size={14} class="breadcrumb-sep" />
+          {crumb.href && index < trail.length - 1 ? (
+            <a href={crumb.href}>{crumb.label}</a>
+          ) : (
+            <span aria-current="page">{crumb.label}</span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

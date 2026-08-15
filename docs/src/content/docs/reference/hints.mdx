@@ -1,12 +1,14 @@
 ---
 title: Hints
-description: Reference for Hint groups, Hint options, actions, and restore behavior.
-order: 12
+navTitle: Hints reference
+description: Group options, per-Hint options, and the eight controller actions.
+order: 13
 ---
 
-# Hints reference
+import Aside from '../../../components/Aside.astro'
 
-Hints use the `driver.js/hints` entrypoint and the `pentiminax--ux-driver--hints` Stimulus controller.
+Hints use the separate `driver.js/hints` entrypoint and the `pentiminax--ux-driver--hints` controller.
+For the introduction, see [Hints](/getting-started/hints/).
 
 ## Group options
 
@@ -21,43 +23,59 @@ Hints use the `driver.js/hints` entrypoint and the `pentiminax--ux-driver--hints
 | `overlayColor` / `overlayColor()` | `string` | Driver.js default |
 | `overlayOpacity` / `overlayOpacity()` | `float` | Driver.js default |
 
-`ux_hints(hints, false)` disables autostart for builder-created Hints.
+`autostart` is the one option with no builder method: pass `false` as the second argument to
+`ux_hints(hints, false)`, or set `:autostart="false"` on the component.
 
 ## Hint options
 
 | Option or prop | Type | Default |
 | --- | --- | --- |
-| `hintId` / `id` | `string` | Driver.js falls back to index |
-| `element` | selector or DOM element | required in builder, component host in Twig |
+| `hintId` / `id` | `string` | Driver.js falls back to the index |
+| `element` | selector or DOM element | required in the builder; the component host in Twig |
 | `title` | `string` or trusted markup | `null` |
 | `description` | `string` or trusted markup | `null` |
 | `side` | `top`, `right`, `bottom`, `left` | `bottom` |
 | `align` | `start`, `center`, `end` | `start` |
 | `tag` | HTML tag name | `div` |
-| `beacon` | `{side, align, animate, className}` | group or Driver.js default |
+| `beacon` | `{side, align, animate, className}` | group value, then Driver.js default |
 | `popoverClass` | `string` | `null` |
 | `showButton` | `bool` | Driver.js default |
-| `buttonText` | `string` or trusted markup | group or Driver.js default |
+| `buttonText` | `string` or trusted markup | group value, then Driver.js default |
 | `data` | array | `null` |
 
-Beacon `side` accepts `top`, `right`, `bottom`, and `left`; `align` accepts `start`, `center`, and `end`.
+Beacon `side` and `align` take the same values as the Hint's own. Give every Hint an explicit `hintId` if
+anything targets it by action — the index fallback shifts whenever the group changes.
 
 ## Actions
 
-| Action | Parameter |
-| --- | --- |
-| `show` | none |
-| `hide` | none |
-| `open` | `hintId` |
-| `close` | none |
-| `dismiss` | `hintId` |
-| `restore` | `hintId` |
-| `restoreAll` | none |
-| `refresh` | none |
+| Action | Effect | Param |
+| --- | --- | --- |
+| `show` | Resolves the hints and shows every beacon | none |
+| `hide` | Removes every beacon | none |
+| `open` | Opens one Hint's popover | `hintId` |
+| `close` | Closes the open popover, keeping the beacons | none |
+| `dismiss` | Retires one beacon | `hintId` |
+| `restore` | Brings one dismissed beacon back | `hintId` |
+| `restoreAll` | Brings every dismissed beacon back | none |
+| `refresh` | Recomputes beacon positions | none |
 
 ```twig
 <button data-action="pentiminax--ux-driver--hints#restore"
-        data-pentiminax--ux-driver--hints-hint-id-param="export">Restore export hint</button>
+        data-pentiminax--ux-driver--hints-hint-id-param="export">
+    Restore export hint
+</button>
 ```
 
-`restoreAll` calls Driver.js `restore()` for every hint, using the hint `id` when present and the zero-based index when it is not. This bundle does not persist dismissed Hints beyond the current Driver.js instance.
+`restoreAll` calls Driver.js `restore()` for every Hint, using the `id` when present and the zero-based
+index when it is not.
+
+<Aside type="warning" title="Dismissals last as long as the instance">
+The bundle does not persist dismissed Hints. A reload rebuilds the group with every beacon visible. To make
+a dismissal stick, listen for `ux-driver:hint-dismiss`, record it server-side, and render the group without
+that Hint — see [Events](/guides/events/).
+</Aside>
+
+## Related
+
+- [Stimulus reference](/reference/stimulus/) — the same actions alongside the Tour controller, plus events.
+- [Styling and localization](/guides/styling-and-localization/) — beacon CSS variables and `buttonText`.

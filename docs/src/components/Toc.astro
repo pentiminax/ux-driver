@@ -1,0 +1,87 @@
+---
+import type { MarkdownHeading } from 'astro'
+
+interface Props {
+  headings: MarkdownHeading[]
+}
+
+const { headings } = Astro.props
+const items = headings.filter((heading) => heading.depth > 1 && heading.depth < 4)
+---
+
+{
+  items.length > 1 && (
+    <nav class="toc" aria-label="On this page" data-toc>
+      {/* Open on desktop, where it is a sidebar; the script folds it on narrow
+          screens so it never stands between the reader and the page title. */}
+      <details class="toc-panel" open data-toc-panel>
+        <summary class="toc-heading">On this page</summary>
+      <ul>
+        {items.map((heading) => (
+          <li class:list={['toc-item', `toc-depth-${heading.depth}`]}>
+            <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+      </details>
+    </nav>
+  )
+}
+
+<script>
+  const toc = document.querySelector('[data-toc]')
+  if (toc) {
+    const panel = toc.querySelector<HTMLDetailsElement>('[data-toc-panel]')
+    const narrow = window.matchMedia('(max-width: 1179px)')
+    const fold = () => {
+      if (panel) panel.open = !narrow.matches
+    }
+    fold()
+    narrow.addEventListener('change', fold)
+
+    toc.addEventListener('click', (event) => {
+      if (narrow.matches && panel && (event.target as HTMLElement).closest('[data-toc-link]')) panel.open = false
+    })
+
+    const links = new Map<string, HTMLAnchorElement>()
+    toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]').forEach((link) => {
+      links.set(link.dataset.tocLink!, link)
+    })
+
+    const headings = [...links.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el))
+
+    let active: HTMLAnchorElement | null = null
+    const visible = new Set<string>()
+
+    const mark = () => {
+      // Whichever tracked heading sits highest in the document while visible wins;
+      // when none is on screen we keep the last one scrolled past.
+      const next = headings.find((heading) => visible.has(heading.id))
+      if (!next) return
+      const link = links.get(next.id)
+      if (!link || link === active) return
+      active?.removeAttribute('aria-current')
+      link.setAttribute('aria-current', 'true')
+      active = link
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id)
+          else visible.delete(entry.target.id)
+        }
+        mark()
+      },
+      // Track a band just under the sticky header so a heading counts as "current"
+      // from the moment it reaches the top of the reading area.
+      { rootMargin: '-88px 0px -70% 0px', threshold: 0 },
+    )
+
+    headings.forEach((heading) => observer.observe(heading))
+  }
+</script>

@@ -1,3 +1,74 @@
-<div class="tabs">
+---
+/**
+ * Server-rendered as a plain stack of labelled panels, which is the whole
+ * no-JS story. The script below folds that stack into real ARIA tabs, reading
+ * the labels off the panels — Astro slots cannot hand a parent its children's
+ * props, and a second list of labels in the MDX would be a second source of
+ * truth to keep in sync.
+ */
+---
+
+<div class="tabs" data-tabs>
   <slot />
 </div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((group, groupIndex) => {
+    const panels = [...group.querySelectorAll<HTMLElement>('[data-tab-panel]')]
+    if (panels.length < 2) return
+
+    const tablist = document.createElement('div')
+    tablist.className = 'tablist'
+    tablist.setAttribute('role', 'tablist')
+
+    const tabs = panels.map((panel, index) => {
+      const id = `tab-${groupIndex}-${index}`
+      panel.id = `${id}-panel`
+      panel.setAttribute('role', 'tabpanel')
+      panel.setAttribute('aria-labelledby', id)
+      panel.hidden = index !== 0
+      panel.querySelector('[data-tab-label]')?.remove()
+
+      const tab = document.createElement('button')
+      tab.type = 'button'
+      tab.className = 'tab'
+      tab.id = id
+      tab.setAttribute('role', 'tab')
+      tab.setAttribute('aria-controls', panel.id)
+      tab.setAttribute('aria-selected', String(index === 0))
+      tab.tabIndex = index === 0 ? 0 : -1
+      tab.textContent = panel.dataset.tabPanel ?? `Tab ${index + 1}`
+      tablist.append(tab)
+      return tab
+    })
+
+    const select = (index: number, focus = true) => {
+      tabs.forEach((tab, i) => {
+        tab.setAttribute('aria-selected', String(i === index))
+        tab.tabIndex = i === index ? 0 : -1
+        panels[i].hidden = i !== index
+      })
+      if (focus) tabs[index].focus()
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index, false))
+      tab.addEventListener('keydown', (event) => {
+        const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (offset) {
+          event.preventDefault()
+          select((index + offset + tabs.length) % tabs.length)
+        } else if (event.key === 'Home') {
+          event.preventDefault()
+          select(0)
+        } else if (event.key === 'End') {
+          event.preventDefault()
+          select(tabs.length - 1)
+        }
+      })
+    })
+
+    group.prepend(tablist)
+    group.dataset.tabsReady = 'true'
+  })
+</script>

@@ -1,0 +1,40 @@
+---
+import { getDocsNavSections, withBase } from '../nav'
+
+interface Props {
+  currentSlug?: string
+  label?: string
+  id?: string
+}
+
+const { currentSlug, label = 'Documentation navigation', id } = Astro.props
+const groups = await getDocsNavSections()
+---
+
+<nav class="docs-nav" aria-label={label} id={id}>
+  {
+    groups.map((group) => (
+      <div class="docs-nav-group">
+        <a
+          class="docs-nav-heading"
+          href={withBase(`${group.section.id}/`)}
+          aria-current={group.section.id === currentSlug ? 'page' : undefined}
+        >
+          {group.section.title}
+        </a>
+        <ul>
+          {group.items.map((item) => (
+            <li>
+              <a
+                href={withBase(`${item.slug}/`)}
+                aria-current={item.slug === currentSlug ? 'page' : undefined}
+              >
+                {item.navTitle}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</nav>

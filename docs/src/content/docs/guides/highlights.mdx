@@ -1,0 +1,79 @@
+---
+title: Highlights
+description: Draw attention to a single element with one popover and no sequence.
+order: 5
+---
+
+import Aside from '../../../components/Aside.astro'
+
+A Highlight is a Tour of one Step. There is no next button, no progress counter, and nothing to
+complete — the overlay dims the page, one element stays lit, and a single popover explains it. Reach for
+it when you have one thing to announce: a new control, a field that just changed meaning, a validation
+error worth pointing at.
+
+## `ux_highlight()`
+
+The Twig function prints controller attributes on the element you put it on:
+
+```twig
+<button type="button"
+        {{ ux_highlight('#invoice-export', 'Export', 'CSV and PDF are both available here') }}
+        data-action="pentiminax--ux-driver--tour#highlight">
+    Where is export?
+</button>
+```
+
+The first argument is the selector of the element to highlight — not the element carrying the attributes.
+`ux_highlight()` builds a one-Step Tour behind the scenes and hands it to the same
+`pentiminax--ux-driver--tour` controller a full Tour uses.
+
+## Signature
+
+```php
+ux_highlight(
+    string $element,
+    string|Markup $title,
+    string|Markup|null $description = null,
+    string $side = 'bottom',
+    string $align = 'start',
+    array $options = [],
+)
+```
+
+`side` accepts `top`, `right`, `bottom`, or `left`; `align` accepts `start`, `center`, or `end`. The
+`options` array takes the same per-Step options a Tour Step accepts, so popover text and placement are
+tuned the same way:
+
+```twig
+{{ ux_highlight('#invoice-export', 'Export', 'CSV and PDF are both available', 'left', 'center', {
+    doneBtnText: 'Got it',
+    popoverClass: 'invoice-popover',
+}) }}
+```
+
+See the [Step reference](/reference/step/) for the full option list and the
+[Security guide](/guides/security/) for what `title` and `description` escape.
+
+<Aside type="note" title="Highlights always run when triggered">
+The generated Tour is rendered with `once=false` and `autostart=false`, and the controller's `highlight`
+action ignores `once` entirely. A Highlight fires every time the action fires — there is no seen flag and
+no way to make one stick. If a piece of help should be shown exactly once, it needs a Tour with
+[`once`](/guides/control-and-persistence/).
+</Aside>
+
+## Trusted markup
+
+`title` and `description` accept `Twig\Markup`, so `ux_driver_html()` works here as it does everywhere:
+
+```twig
+{{ ux_highlight('#invoice-export', ux_driver_html('<strong>Export</strong>'), 'CSV and PDF') }}
+```
+
+Only pass markup you control. [Security](/guides/security/) covers why.
+
+## Highlight or Tour
+
+A Highlight is the right shape when the answer is one element. As soon as the explanation needs a second
+Step, write a [Tour](/getting-started/first-tour/) instead — the Tour gives you navigation buttons, the
+progress counter, and `once`. And if the help should stay on the page rather than be summoned,
+[Hints](/getting-started/hints/) are the persistent form.

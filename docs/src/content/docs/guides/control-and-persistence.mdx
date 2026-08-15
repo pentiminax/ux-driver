@@ -1,16 +1,18 @@
 ---
 title: Control and persistence
-description: Control Tours and Hints from Stimulus actions and understand once storage.
-order: 5
+description: Start, drive, and remember Tours and Hints from Stimulus actions.
+order: 6
 ---
 
-# Control and persistence
+import Aside from '../../../components/Aside.astro'
 
-Tours and Hints are controlled by separate Stimulus controllers.
+Tours and Hints each have their own Stimulus controller, and both are driven entirely from
+`data-action` attributes. Nothing here requires application JavaScript.
 
 ## Autostart
 
-Tours default to `autostart=false`; Hints default to `autostart=true`.
+Tours default to `autostart=false`; Hints default to `autostart=true`. The asymmetry is deliberate: a Tour
+takes the screen away from someone, a beacon does not.
 
 ```twig
 <twig:Driver:Tour id="welcome" :autostart="true">
@@ -22,21 +24,39 @@ Tours default to `autostart=false`; Hints default to `autostart=true`.
 </twig:Driver:Hints>
 ```
 
-The builder helper follows the same defaults: `ux_tour(tour)` renders a non-autostarting Tour, while `ux_hints(hints)` autostarts unless you pass `false` as the second argument.
+Builders keep the same defaults: `ux_tour(tour)` renders a Tour that waits, and `ux_hints(hints)`
+autostarts unless you pass `false` as the second argument.
 
-## Once
+## `once`
 
-`once` belongs to UX Driver. It stores `ux-driver:seen:<id>` in `window.localStorage` only when the Tour reaches `ux-driver:done`.
+`once` is a UX Driver option, not a Driver.js one. With `:once="true"`, the controller writes
+`ux-driver:seen:<id>` to `window.localStorage` and refuses to start that Tour again — autostart and manual
+triggers both return early.
 
-Closing a Tour, pressing Escape, or destroying it early does not mark it seen. Preventing the cancelable `ux-driver:done` event also prevents persistence.
+The flag is written at exactly one moment: when someone clicks the done button on the last Step. That
+narrow rule has consequences worth knowing:
 
-If storage is blocked or full, the controller treats the Tour as unseen and replays it. Storage failures are caught so the page keeps working.
+- Closing the Tour, pressing Escape, or navigating away leaves it unseen, so it comes back next time.
+- Calling `preventDefault()` on the cancelable `ux-driver:done` event also prevents the write.
+- If `localStorage` is unavailable — private browsing, blocked cookies, a full quota — the controller
+  catches the failure, treats the Tour as unseen, and shows it again. The page keeps working; the Tour
+  simply stops being once-only.
 
-## Restart policy
+<Aside type="warning" title="`once` is per browser, not per user">
+The flag lives in `localStorage`, so it does not follow someone to another device or survive a cleared
+profile. When "shown once" is a product guarantee rather than a courtesy, store it server-side and render
+the Tour conditionally.
+</Aside>
 
-Calling `start` or `highlight` destroys the current Driver.js instance before creating the next one. Re-triggering starts from the first step unless you pass an index parameter.
+Hints have no equivalent. Driver.js tracks dismissed beacons on the live instance only, and a reload
+brings them all back.
 
-## Actions
+## Restarting
+
+`start` and `highlight` both destroy the current Driver.js instance before creating the next one, so a
+second trigger always yields a clean Tour from Step one — unless `moveTo` sends it elsewhere.
+
+## Tour actions
 
 ```twig
 <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
@@ -49,9 +69,21 @@ Calling `start` or `highlight` destroys the current Driver.js instance before cr
         data-pentiminax--ux-driver--tour-index-param="2">Go to step 3</button>
 ```
 
+`moveTo` requires the `index` param and counts from zero. Omitting it does nothing.
+
+## Hints actions
+
 ```twig
 <button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
 <button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
-<button data-action="pentiminax--ux-driver--hints#close">Close hint</button>
-<button data-action="pentiminax--ux-driver--hints#restoreAll">Restore hints</button>
+<button data-action="pentiminax--ux-driver--hints#close">Close the open popover</button>
+<button data-action="pentiminax--ux-driver--hints#restoreAll">Restore dismissed hints</button>
 ```
+
+Four more actions take a `hintId` param. All eight, with their parameters, are in the
+[Hints reference](/reference/hints/).
+
+## Next
+
+- [Events](/guides/events/) — cancel a navigation, or react to one.
+- [Stimulus reference](/reference/stimulus/) — every value, action, and event, in one table.

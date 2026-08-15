@@ -2,12 +2,17 @@
 import { getCollection, render } from 'astro:content'
 import Aside from '../components/Aside.astro'
 import Badge from '../components/Badge.astro'
+import Breadcrumb from '../components/Breadcrumb.astro'
+import DocsDrawer from '../components/DocsDrawer.astro'
+import DocsNav from '../components/DocsNav.astro'
+import Icon from '../components/Icon.astro'
+import Pager from '../components/Pager.astro'
 import Steps from '../components/Steps.astro'
 import TabItem from '../components/TabItem.astro'
-import Table from '../components/Table.astro'
 import Tabs from '../components/Tabs.astro'
+import Toc from '../components/Toc.astro'
 import Layout from '../layouts/Layout.astro'
-import { docsNav, docsNavSections, withBase } from '../nav'
+import { getDocsNav, withBase } from '../nav'
 
 export async function getStaticPaths() {
   const entries = await getCollection('docs')
@@ -20,61 +25,53 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props
 const { Content, headings } = await render(entry)
-const currentIndex = docsNav.findIndex((item) => item.slug === entry.id)
-const previous = docsNav[currentIndex - 1]
-const next = docsNav[currentIndex + 1]
+
+const nav = await getDocsNav()
+const index = nav.findIndex((item) => item.slug === entry.id)
+const current = nav[index]
+const previous = nav[index - 1]
+const next = nav[index + 1]
+
 const editUrl = `https://github.com/pentiminax/ux-driver/edit/main/docs/src/content/docs/${entry.id}.mdx`
 ---
 
 <Layout title={`${entry.data.title} | UX Driver`} description={entry.data.description}>
-  <div class="doc-shell">
-    <details class="mobile-docs-nav">
-      <summary>Docs navigation</summary>
-      <nav aria-label="Documentation navigation">
-        {docsNavSections.map((section) => (
-          <>
-            <p>{section.section}</p>
-            {section.items.map((item) => (
-              <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
-                {item.title}
-              </a>
-            ))}
-          </>
-        ))}
-      </nav>
-    </details>
+  <DocsDrawer
+    currentSlug={entry.id}
+    currentTitle={entry.data.title}
+    sectionTitle={current.section.title}
+  />
 
+  <div class="doc-shell">
     <aside class="doc-sidebar">
-      <nav aria-label="Documentation navigation">
-        {docsNavSections.map((section) => (
-          <>
-            <p>{section.section}</p>
-            {section.items.map((item) => (
-              <a href={withBase(`${item.slug}/`)} aria-current={item.slug === entry.id ? 'page' : undefined}>
-                {item.title}
-              </a>
-            ))}
-          </>
-        ))}
-      </nav>
+      <DocsNav currentSlug={entry.id} />
     </aside>
 
     <article class="doc-article" data-pagefind-body>
-      <a class="edit-link" href={editUrl}>Edit on GitHub</a>
-      <Content components={{ Aside, Badge, Steps, TabItem, Table, Tabs }} />
-      <nav class="pager" aria-label="Previous and next pages">
-        {previous && <a href={withBase(`${previous.slug}/`)}>Previous: {previous.title}</a>}
-        {next && <a href={withBase(`${next.slug}/`)}>Next: {next.title}</a>}
-      </nav>
+      <header class="doc-header">
+        <Breadcrumb
+          trail={[
+            { label: current.section.title, href: withBase(`${current.section.id}/`) },
+            { label: entry.data.title },
+          ]}
+        />
+        <h1>{entry.data.title}</h1>
+        <p class="doc-lede">{entry.data.description}</p>
+      </header>
+
+      <Content components={{ Aside, Badge, Steps, TabItem, Tabs }} />
+
+      <footer class="doc-footer">
+        <a class="edit-link" href={editUrl}>
+          <Icon name="pencil" size={16} />
+          Edit this page on GitHub
+        </a>
+        <Pager previous={previous} next={next} />
+      </footer>
     </article>
 
     <aside class="doc-toc">
-      <nav aria-label="Table of contents">
-        <p>On this page</p>
-        {headings.filter((heading) => heading.depth > 1 && heading.depth < 4).map((heading) => (
-          <a href={`#${heading.slug}`}>{heading.text}</a>
-        ))}
-      </nav>
+      <Toc headings={headings} />
     </aside>
   </div>
 </Layout>

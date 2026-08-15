@@ -1,0 +1,75 @@
+---
+/**
+ * Every icon on the site comes from here. One geometry (24 viewBox, 1.5 stroke,
+ * round caps) so a row of icons reads as one family rather than a ransom note
+ * of glyphs from different fonts.
+ */
+export type IconName =
+  | 'search'
+  | 'sun'
+  | 'moon'
+  | 'menu'
+  | 'close'
+  | 'chevron-right'
+  | 'chevron-left'
+  | 'chevron-down'
+  | 'link'
+  | 'copy'
+  | 'check'
+  | 'github'
+  | 'arrow-right'
+  | 'arrow-up-right'
+  | 'note'
+  | 'tip'
+  | 'warning'
+  | 'danger'
+  | 'list'
+  | 'pencil'
+
+interface Props {
+  name: IconName
+  size?: number
+  class?: string
+}
+
+const { name, size = 20, class: className } = Astro.props
+
+const paths: Record<IconName, string> = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  'chevron-right': '<path d="m9 5 7 7-7 7"/>',
+  'chevron-left': '<path d="m15 5-7 7 7 7"/>',
+  'chevron-down': '<path d="m5 9 7 7 7-7"/>',
+  link: '<path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.3 1.3"/><path d="M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l1.3-1.3"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A1.5 1.5 0 0 0 13.5 4H6a2 2 0 0 0-2 2v7.5A1.5 1.5 0 0 0 5.5 15"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  github:
+    '<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.9a3.4 3.4 0 0 0-1-2.6c3.1-.4 6.4-1.6 6.4-7a5.4 5.4 0 0 0-1.5-3.8 5 5 0 0 0-.1-3.8s-1.2-.4-3.9 1.5a13.4 13.4 0 0 0-7 0C5.2 1.5 4 1.9 4 1.9a5 5 0 0 0-.1 3.8A5.4 5.4 0 0 0 2.3 9.5c0 5.4 3.3 6.6 6.4 7A3.4 3.4 0 0 0 7.8 19v3.9" transform="translate(0 1)"/>',
+  'arrow-right': '<path d="M4 12h15M13 6l6 6-6 6"/>',
+  'arrow-up-right': '<path d="M7 17 17 7M8 7h9v9"/>',
+  note: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  tip: '<path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7h6c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5Z"/>',
+  warning: '<path d="M12 3.5 2.7 19.5h18.6L12 3.5Z"/><path d="M12 10v4M12 17.5h.01"/>',
+  danger: '<circle cx="12" cy="12" r="9"/><path d="m8.5 8.5 7 7M15.5 8.5l-7 7"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  pencil: '<path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+}
+---
+
+<svg
+  class:list={['icon', className]}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+  set:html={paths[name]}
+/>

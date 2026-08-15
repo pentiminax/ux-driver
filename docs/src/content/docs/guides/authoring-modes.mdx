@@ -4,44 +4,83 @@ description: Choose between declarative Twig Components and builder-based Tours 
 order: 4
 ---
 
-# Authoring modes
+import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
-UX Driver exposes the same serialized config through two authoring modes.
+There are two ways to declare a Tour or a Hints group, and they produce the same serialized configuration
+for the same Stimulus controller. The choice is about where the help is easiest to read and maintain.
 
 ## Twig Components
 
-Use components when the target markup lives in the same template:
+Components put the help inside the template, wrapped around the element it describes:
 
 ```twig
 <twig:Driver:Tour id="profile-tour">
     <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+
     <twig:Driver:Step :order="1" title="Profile" description="Keep your public details current">
         <section class="profile-card">...</section>
     </twig:Driver:Step>
 </twig:Driver:Tour>
 ```
 
-`<twig:Driver:Step>` and `<twig:Driver:Hint>` render normal elements with `data-*` attributes. The controller reads those attributes only when no builder steps or hints were provided.
+`<twig:Driver:Step>` and `<twig:Driver:Hint>` render ordinary elements carrying `data-*` attributes. The
+controller reads those attributes only when no builder Steps or Hints were passed — builder input wins.
 
 ## Builders
 
-Use `create_tour()` or `TourBuilder` when the list is data-driven or easier to compose away from the target markup:
+Builders compose the same objects away from the markup, addressing elements by selector:
 
-```php
-$tour = $this->tourBuilder->create('profile-tour')
-    ->addStep('.profile-card', 'Profile', 'Keep your public details current')
-    ->addStep('.security-card', 'Security', 'Review login settings', side: 'top');
-```
-
-Use `create_hints()` or `HintsBuilder` the same way:
-
+<Tabs>
+<TabItem label="Twig">
 ```twig
-{% set hints = create_hints('profile-help')
-    .addHint('.security-card', 'security', 'Security', 'Review login settings') %}
+{% set tour = create_tour('profile-tour')
+    .addStep('.profile-card', 'Profile', 'Keep your public details current')
+    .addStep('.security-card', 'Security', 'Review login settings', 'top') %}
 
-<div {{ ux_hints(hints) }}></div>
+<button {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">Start tour</button>
 ```
+
+`create_tour()` and `create_hints()` are Twig functions registered by the bundle; `ux_tour()` and
+`ux_hints()` print the controller attributes.
+</TabItem>
+
+<TabItem label="PHP">
+```php
+use Pentiminax\UX\Driver\Builder\TourBuilder;
+
+public function __construct(private readonly TourBuilder $tourBuilder)
+{
+}
+
+public function profile(): Response
+{
+    $tour = $this->tourBuilder->create('profile-tour')
+        ->addStep('.profile-card', 'Profile', 'Keep your public details current')
+        ->addStep('.security-card', 'Security', 'Review login settings', side: 'top');
+
+    return $this->render('profile.html.twig', ['tour' => $tour]);
+}
+```
+
+`TourBuilder` and `HintsBuilder` are autowired services — type-hint them in a controller or a service and
+Symfony injects them. The template then prints `{{ ux_tour(tour) }}` on the trigger element.
+</TabItem>
+</Tabs>
+
+<Aside type="warning" title="`ux_tour()` never autostarts">
+`ux_tour(tour)` always renders `autostart=false`, whatever the Tour object says, so a builder Tour needs a
+`pentiminax--ux-driver--tour#start` action somewhere. `ux_hints(hints)` is the mirror image: it autostarts
+unless you pass `false` as the second argument.
+</Aside>
 
 ## Choosing
 
-Components are clearer when authors can read the help next to the markup. Builders are clearer when selectors are stable and the flow is assembled in a controller, macro, or condition. Both paths validate through the same model classes before reaching Stimulus.
+Reach for **components** when the target markup lives in the same template and you want the next developer
+to see the help while editing the page. Reach for **builders** when the Steps are data-driven, conditional,
+or assembled in a controller or macro, and the selectors are stable.
+
+Both paths run through the same `Tour`, `Step`, `Hints`, and `Hint` model classes, so validation and
+escaping behave identically. See [Security](/guides/security/) for what gets escaped, and
+[Dynamic targets](/guides/dynamic-targets/) for the one capability only builder Steps have.

@@ -1,0 +1,232 @@
+@layer layout {
+  /* ---- Header -------------------------------------------------------- */
+  .site-header {
+    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .site-header-inner {
+    align-items: center;
+    display: flex;
+    gap: var(--space-4);
+    height: var(--header-h);
+    margin-inline: auto;
+    max-width: var(--layout-max);
+    padding-inline: var(--space-5);
+  }
+
+  .brand {
+    align-items: center;
+    color: var(--text);
+    display: inline-flex;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    gap: var(--space-2);
+    letter-spacing: var(--tracking-snug);
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    background: conic-gradient(from 140deg, var(--indigo-500) 0 55%, var(--amber-500) 55% 100%);
+    border-radius: var(--radius-full);
+    display: inline-block;
+    height: 0.9rem;
+    width: 0.9rem;
+  }
+
+  .top-nav {
+    display: flex;
+    gap: var(--space-1);
+    margin-right: auto;
+  }
+
+  .top-nav a {
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: var(--space-2) var(--space-3);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .top-nav a:hover {
+    color: var(--text);
+  }
+
+  .top-nav a[aria-current] {
+    background: var(--accent-surface);
+    color: var(--accent);
+  }
+
+  .header-actions {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* ---- Main and footer ----------------------------------------------- */
+  .site-main {
+    display: block;
+    min-height: 60vh;
+  }
+
+  /* Pages outside the documentation grid (home, 404) carry the page gutter
+     themselves instead of inheriting `.doc-shell`. */
+  .site-main-wide {
+    margin-inline: auto;
+    max-width: var(--layout-max);
+    padding-inline: var(--space-5);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--border);
+    margin-top: var(--space-24);
+  }
+
+  .site-footer-inner {
+    align-items: center;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--text-sm);
+    gap: var(--space-4) var(--space-6);
+    justify-content: space-between;
+    margin-inline: auto;
+    max-width: var(--layout-max);
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .site-footer-inner p {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  .site-footer-inner nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+  }
+
+  .site-footer-inner a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .site-footer-inner a:hover {
+    color: var(--accent);
+  }
+
+  /* ---- Documentation shell -------------------------------------------
+     Three columns above 1180px; sidebar plus prose down to 900px, where the
+     table of contents moves above the article; one column below that. */
+  .doc-shell {
+    align-items: start;
+    display: grid;
+    gap: var(--space-10);
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--toc-w);
+    margin-inline: auto;
+    max-width: var(--layout-max);
+    padding: var(--space-10) var(--space-5) var(--space-16);
+  }
+
+  .doc-sidebar,
+  .doc-toc {
+    max-height: calc(100vh - var(--header-h) - var(--space-8));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-6));
+  }
+
+  .doc-article {
+    max-width: var(--prose-max);
+    min-width: 0;
+  }
+
+  .doc-header {
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-6);
+  }
+
+  .doc-header h1 {
+    font-size: var(--text-3xl);
+    margin: var(--space-4) 0 var(--space-3);
+  }
+
+  .doc-lede {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .doc-footer {
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-16);
+    padding-top: var(--space-6);
+  }
+
+  /* The mobile section bar and drawer only exist below 1180px. */
+  .docs-bar {
+    display: none;
+  }
+
+  @media (max-width: 1179px) {
+    .doc-shell {
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    }
+
+    .doc-toc {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      max-height: none;
+      overflow: visible;
+      position: static;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .docs-bar {
+      display: block;
+    }
+
+    .doc-shell {
+      gap: var(--space-6);
+      grid-template-columns: minmax(0, 1fr);
+      padding: var(--space-6) var(--space-5) var(--space-12);
+    }
+
+    .doc-sidebar {
+      display: none;
+    }
+
+    .top-nav {
+      display: none;
+    }
+
+    .search-trigger-label,
+    .search-trigger kbd {
+      display: none;
+    }
+
+    .site-header-inner {
+      gap: var(--space-3);
+    }
+
+    .brand {
+      margin-right: auto;
+    }
+  }
+}

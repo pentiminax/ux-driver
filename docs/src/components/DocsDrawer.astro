@@ -1,0 +1,62 @@
+---
+import DocsNav from './DocsNav.astro'
+import Icon from './Icon.astro'
+
+interface Props {
+  currentSlug: string
+  currentTitle: string
+  sectionTitle: string
+}
+
+const { currentSlug, currentTitle, sectionTitle } = Astro.props
+---
+
+<div class="docs-bar">
+  <button type="button" class="docs-bar-trigger" data-drawer-trigger aria-haspopup="dialog">
+    <Icon name="list" size={18} />
+    <span class="docs-bar-section">{sectionTitle}</span>
+    <span class="docs-bar-page">{currentTitle}</span>
+    <Icon name="chevron-down" size={16} class="docs-bar-caret" />
+  </button>
+</div>
+
+<dialog class="docs-drawer" data-drawer aria-label="Documentation navigation">
+  <div class="docs-drawer-head">
+    <p>Documentation</p>
+    <button type="button" class="docs-drawer-close" data-drawer-close aria-label="Close navigation">
+      <Icon name="close" size={18} />
+    </button>
+  </div>
+  <DocsNav currentSlug={currentSlug} label="Documentation navigation" />
+</dialog>
+
+<script>
+  const drawer = document.querySelector<HTMLDialogElement>('[data-drawer]')
+  const trigger = document.querySelector('[data-drawer-trigger]')
+  const close = document.querySelector('[data-drawer-close]')
+
+  if (drawer && trigger) {
+    let lastFocused: Element | null = null
+
+    trigger.addEventListener('click', () => {
+      lastFocused = document.activeElement
+      drawer.showModal()
+      // A selector list matches in document order, so the current page needs its own query.
+      const current = drawer.querySelector<HTMLAnchorElement>('[aria-current="page"]')
+      ;(current ?? drawer.querySelector<HTMLAnchorElement>('a'))?.focus()
+    })
+
+    close?.addEventListener('click', () => drawer.close())
+
+    drawer.addEventListener('click', (event) => {
+      const box = drawer.getBoundingClientRect()
+      const outside =
+        event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom
+      if (outside) drawer.close()
+    })
+
+    drawer.addEventListener('close', () => {
+      ;(lastFocused as HTMLElement | null)?.focus?.()
+    })
+  }
+</script>

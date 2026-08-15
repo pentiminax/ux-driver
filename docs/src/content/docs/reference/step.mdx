@@ -1,12 +1,13 @@
 ---
 title: Step
-description: Reference for per-step options and placement values.
-order: 11
+description: Per-Step options, placement values, and the centered variant.
+order: 12
 ---
 
-# Step reference
+import Aside from '../../../components/Aside.astro'
 
-A Step can target an element or be centered on the screen.
+A Step targets one element, or nothing at all. Every option here overrides the Tour-level value for that
+Step only.
 
 ## Builder arguments
 
@@ -17,15 +18,15 @@ $tour->addStep(
     description: 'Description',
     side: 'bottom',
     align: 'start',
-    options: []
+    options: [],
 );
 ```
 
-`element` may be `null` for a centered step.
+`element` may be `null`, which produces a centered Step. `options` takes any key from the table below.
 
-## Component props
+## Options
 
-| Prop | Type | Default |
+| Option or prop | Type | Default |
 | --- | --- | --- |
 | `order` | `int` | `0` |
 | `title` | `string` or trusted markup | `null` |
@@ -45,12 +46,14 @@ $tour->addStep(
 | `disableActiveInteraction` | `bool` | `null` |
 | `advanceOnClick` | `bool` | `null` |
 | `skipMissingElement` | `bool` | `null` |
-| `waitForElement` | `int` milliseconds | `null` |
+| `waitForElement` | `int` ms | `null` |
 | `data` | array | `null` |
 
-`showButtons` and `disableButtons` accept only `next`, `previous`, and `close`.
+`null` means "inherit from the Tour". `showButtons` and `disableButtons` accept only the three named
+values. `data` is passed through untouched and reappears in the `detail` of
+[Hints events](/reference/stimulus/) — for Steps it is available on the serialized step object.
 
-## Centered step
+## Centered Step
 
 ```twig
 <twig:Driver:Step
@@ -61,9 +64,9 @@ $tour->addStep(
 />
 ```
 
-The component renders a `<template>` host so no fake layout element is added.
+The component renders a `<template>` host, so a centered Step adds no layout element to the page.
 
-## Dynamic targets
+## Async targets
 
 ```php
 $tour->addStep('#late-panel', 'Panel', options: [
@@ -72,4 +75,11 @@ $tour->addStep('#late-panel', 'Panel', options: [
 ]);
 ```
 
-`advanceOnClick`, `waitForElement`, and `skipMissingElement` require Driver.js 1.8 through this package.
+<Aside type="note" title="Async options need a selector">
+`waitForElement` and `skipMissingElement` only mean something for a Step addressed by selector. A
+`<twig:Driver:Step>` wraps an element that has already rendered.
+[Dynamic targets](/guides/dynamic-targets/) covers the whole pattern.
+</Aside>
+
+`advanceOnClick`, `waitForElement`, and `skipMissingElement` all require Driver.js 1.8 — the floor this
+bundle declares anyway ([Compatibility](/reference/compatibility/)).

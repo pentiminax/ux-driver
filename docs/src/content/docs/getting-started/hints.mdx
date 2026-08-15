@@ -4,10 +4,15 @@ description: Add contextual beacons with Twig Components or the hints builder.
 order: 3
 ---
 
-# Hints
+import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
-Hints show beacons next to controls and let users open contextual help when they need it.
+A Tour interrupts; a Hint waits. Hints put a small beacon next to a control and open a popover when
+someone asks for it — the right shape for help that should outlive onboarding.
 
+<Tabs>
+<TabItem label="Twig Components">
 ```twig
 <twig:Driver:Hints id="orders-help" buttonText="Done" :overlay="true">
     <twig:Driver:Hint hintId="filters" title="Filters" description="Save time by narrowing the order list first">
@@ -19,24 +24,9 @@ Hints show beacons next to controls and let users open contextual help when they
     </twig:Driver:Hint>
 </twig:Driver:Hints>
 ```
+</TabItem>
 
-Hints autostart by default. Set `:autostart="false"` and call `pentiminax--ux-driver--hints#show` when beacons should appear later.
-
-## Actions
-
-```twig
-<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
-<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
-<button data-action="pentiminax--ux-driver--hints#open"
-        data-pentiminax--ux-driver--hints-hint-id-param="filters">Open filters hint</button>
-<button data-action="pentiminax--ux-driver--hints#dismiss"
-        data-pentiminax--ux-driver--hints-hint-id-param="filters">Dismiss filters hint</button>
-```
-
-`close` closes the open popover. `dismiss` hides one beacon through Driver.js. This bundle does not persist dismissed Hints across page loads.
-
-## Builder alternative
-
+<TabItem label="Builder">
 ```twig
 {% set hints = create_hints('orders-help')
     .addHint('.filters', 'filters', 'Filters', 'Save time by narrowing the list first')
@@ -45,3 +35,38 @@ Hints autostart by default. Set `:autostart="false"` and call `pentiminax--ux-dr
 
 <div {{ ux_hints(hints) }}></div>
 ```
+</TabItem>
+</Tabs>
+
+<Aside type="note" title="Hints start on their own">
+Unlike Tours, Hints autostart. Set `:autostart="false"` on the component — or pass `false` as the second
+argument to `ux_hints(hints, false)` — when the beacons should only appear after something else happens.
+</Aside>
+
+## Showing and hiding
+
+The Hints group is driven by the `pentiminax--ux-driver--hints` controller:
+
+```twig
+<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
+<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
+<button data-action="pentiminax--ux-driver--hints#close">Close the open popover</button>
+
+<button data-action="pentiminax--ux-driver--hints#open"
+        data-pentiminax--ux-driver--hints-hint-id-param="filters">Open the filters hint</button>
+```
+
+`hide` removes every beacon; `close` only closes the popover that is open. To retire a single beacon, or
+bring it back, use `dismiss` and `restore` — all eight actions and their parameters are listed in the
+[Hints reference](/reference/hints/).
+
+<Aside type="warning" title="Dismissals do not survive a reload">
+Driver.js tracks dismissed Hints on the live instance, and UX Driver does not persist that. After a page
+load every beacon is back. Only Tours have a persistent flag, through
+[`once`](/guides/control-and-persistence/).
+</Aside>
+
+## Next
+
+- [Hints reference](/reference/hints/) — group options, per-Hint options, actions.
+- [Styling and localization](/guides/styling-and-localization/) — beacon CSS variables and translated button text.

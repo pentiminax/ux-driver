@@ -1,40 +1,51 @@
 ---
 title: Styling and localization
-description: Customize visible text and CSS for Driver.js popovers and Hints.
-order: 7
+description: Translate popover labels and restyle Driver.js popovers and Hints.
+order: 8
 ---
 
-# Styling and localization
+import Aside from '../../../components/Aside.astro'
 
-UX Driver serializes Driver.js text options from PHP and Twig.
+Every visible string Driver.js renders comes from an option UX Driver serializes, so translation happens in
+Twig with the rest of the page — no JavaScript locale bundle.
 
 ## Text
+
+Tours and Steps both accept the four label options. Set them on the Tour for the whole walkthrough, or on
+one Step to override it there:
 
 ```twig
 <twig:Driver:Tour
     id="checkout-tour"
     progressText="{{ '{{current}}' }} / {{ '{{total}}' }}"
-    nextBtnText="Next"
-    prevBtnText="Back"
-    doneBtnText="Done"
+    nextBtnText="{{ 'tour.next'|trans }}"
+    prevBtnText="{{ 'tour.back'|trans }}"
+    doneBtnText="{{ 'tour.done'|trans }}"
 >
     ...
 </twig:Driver:Tour>
 ```
 
-For Hints, use `buttonText`:
+`progressText` is a Driver.js template: `{{ '{{current}}' }}` and `{{ '{{total}}' }}` are substituted at
+render time. The Twig escaping above is only there to stop Twig from claiming the braces first.
+
+Hints use a single `buttonText`:
 
 ```twig
-<twig:Driver:Hints id="checkout-help" buttonText="Done">
+<twig:Driver:Hints id="checkout-help" buttonText="{{ 'hints.done'|trans }}">
     ...
 </twig:Driver:Hints>
 ```
 
-These text values are escaped by default because Driver.js writes them with `innerHTML`.
+<Aside type="note" title="Labels are escaped like everything else">
+Driver.js writes these strings with `innerHTML`, so UX Driver escapes them first. A translation containing
+`&` or `<` renders as text, not markup. [Security](/guides/security/) covers the escaping rules and the
+one function that opts out of them.
+</Aside>
 
 ## Popover CSS
 
-Use `popoverClass` to add a class to the Driver.js popover wrapper:
+`popoverClass` adds a class to the popover wrapper, on the Tour or on a single Step:
 
 ```twig
 <twig:Driver:Tour id="checkout-tour" popoverClass="checkout-popover">
@@ -42,49 +53,68 @@ Use `popoverClass` to add a class to the Driver.js popover wrapper:
 </twig:Driver:Tour>
 ```
 
+The popover's four arrow variants are colored borders on a pseudo-element, one per side. A custom
+variable keeps them in sync with the popover background:
+
 ```css
 .driver-popover.checkout-popover {
-  background-color: #111827;
+  --popover-bg: #111827;
+
+  background-color: var(--popover-bg);
   color: #f9fafb;
 }
 
-.driver-popover.checkout-popover .driver-popover-title {
+.checkout-popover .driver-popover-title {
   color: #ffffff;
 }
 
-.driver-popover.checkout-popover .driver-popover-description,
-.driver-popover.checkout-popover .driver-popover-progress-text {
+.checkout-popover .driver-popover-description,
+.checkout-popover .driver-popover-progress-text {
   color: #d1d5db;
 }
 
-.driver-popover.checkout-popover .driver-popover-footer-btn {
+.checkout-popover .driver-popover-footer-btn {
   background-color: #f9fafb;
-  color: #111827;
+  color: var(--popover-bg);
 }
 
-.driver-popover.checkout-popover .driver-popover-arrow-side-left {
-  border-left-color: #111827;
-}
+.checkout-popover .driver-popover-arrow-side-top { border-top-color: var(--popover-bg) }
+.checkout-popover .driver-popover-arrow-side-right { border-right-color: var(--popover-bg) }
+.checkout-popover .driver-popover-arrow-side-bottom { border-bottom-color: var(--popover-bg) }
+.checkout-popover .driver-popover-arrow-side-left { border-left-color: var(--popover-bg) }
+```
 
-.driver-popover.checkout-popover .driver-popover-arrow-side-right {
-  border-right-color: #111827;
-}
+## The class surface
 
-.driver-popover.checkout-popover .driver-popover-arrow-side-top {
-  border-top-color: #111827;
-}
+Driver.js 1.8 exposes `--driver-popover-font-family` as its only popover custom property. Everything else
+is a class: `.driver-popover`, `.driver-popover-title`, `.driver-popover-description`,
+`.driver-popover-footer`, `.driver-popover-progress-text`, `.driver-popover-footer-btn`,
+`.driver-popover-arrow`, `.driver-overlay`, and `.driver-active-element`.
 
-.driver-popover.checkout-popover .driver-popover-arrow-side-bottom {
-  border-bottom-color: #111827;
+Hints add `.driver-hint`, `.driver-hint-dot`, `.driver-hint-pulse`, `.driver-hint-popover`, and
+`.driver-hint-overlay`, and their stylesheet is variable-driven:
+
+| Variable | Controls |
+| --- | --- |
+| `--driver-hint-size` | Beacon diameter |
+| `--driver-hint-color` | Beacon and pulse color |
+| `--driver-hint-animation-duration` | Pulse cycle length |
+
+```css
+.driver-hint {
+  --driver-hint-color: #e23845;
+  --driver-hint-size: 14px;
 }
 ```
 
-Driver.js 1.8 exposes `--driver-popover-font-family` for the popover font. Other popover colors are styled through classes such as `.driver-popover`, `.driver-popover-title`, `.driver-popover-description`, `.driver-popover-footer`, `.driver-popover-progress-text`, `.driver-popover-footer-btn`, `.driver-popover-arrow`, `.driver-overlay`, and `.driver-active-element`.
+## Motion
 
-Hints add `.driver-hint`, `.driver-hint-dot`, `.driver-hint-pulse`, `.driver-hint-popover`, and `.driver-hint-overlay`. Their CSS exposes `--driver-hint-size`, `--driver-hint-color`, and `--driver-hint-animation-duration`.
+`:animate="false"` turns off the Driver.js transition between Steps. The bundle does not read
+`prefers-reduced-motion` for you — if that matters, decide it in the template:
 
-## Motion and accessibility
+```twig
+<twig:Driver:Tour id="checkout-tour" :animate="animate ?? true">
+```
 
-Set `:animate="false"` when you want a no-animation Tour. The bundle does not automatically read `prefers-reduced-motion`; keep that decision in your app when needed.
-
-Keep titles short, button text explicit, and do not rely on color alone in custom themes.
+Beyond motion: keep titles short, make button labels say what happens, and do not let color carry meaning
+on its own in a custom theme.
