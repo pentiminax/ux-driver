@@ -1,68 +1,100 @@
 ---
 title: Tour
-description: Reference for Tour options, methods, and Twig component props.
-order: 10
+description: Every Tour option, method, and component prop, with its default.
+order: 11
 ---
 
-# Tour reference
+import Aside from '../../../components/Aside.astro'
+import Badge from '../../../components/Badge.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
-`Tour` represents a Driver.js walkthrough. The constructor and builder require a stable `id`.
+A Tour is a Driver.js walkthrough plus the two things UX Driver adds on top: a stable `id` and the `once`
+flag. Every option below can be set in all three authoring forms.
 
 ## Create
 
-```twig
-{% set tour = create_tour('onboarding') %}
-```
-
-```php
-$tour = $tourBuilder->create('onboarding');
-```
-
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Tour id="onboarding">
     ...
 </twig:Driver:Tour>
 ```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('onboarding') %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour = $tourBuilder->create('onboarding');
+```
+</TabItem>
+</Tabs>
+
+`TourBuilder` is an autowired service — type-hint it in a controller and Symfony injects it. The `id` is
+required, and it is the key `once` persists under.
 
 ## Options
+
+Builder methods carry the same name as the component prop. <Badge tone="bundle">Bundle</Badge> marks
+options UX Driver adds; everything else is passed through to Driver.js.
 
 | Option or method | Type | Default |
 | --- | --- | --- |
 | `showProgress` / `showProgress()` | `bool` | bundle `true`; Driver.js default `false` |
-| `animate` / `animate()` | `bool` | component `true`; Driver.js default `true` |
-| `smoothScroll` / `smoothScroll()` | `bool` | component `false`; Driver.js default `false` |
-| `allowClose` / `allowClose()` | `bool` | component `true`; Driver.js default `true` |
-| `allowScroll` / `allowScroll()` | `bool` | Driver.js default `false` |
-| `allowKeyboardControl` / `allowKeyboardControl()` | `bool` | Driver.js default `true` |
-| `disableActiveInteraction` / `disableActiveInteraction()` | `bool` | Driver.js default `false` |
-| `duration` / `duration()` | `int` milliseconds | Driver.js default `500` |
-| `overlayColor` / `overlayColor()` | `string` | Driver.js default `#000` |
-| `overlayOpacity` / `overlayOpacity()` | `float` | Driver.js default `0.7` |
-| `overlayClickBehavior` / `overlayClickBehavior()` | `close` or `nextStep` | Driver.js default `close` |
-| `stagePadding` / `stagePadding()` | `int` | Driver.js default `10` |
-| `stageRadius` / `stageRadius()` | `int` | Driver.js default `5` |
+| `animate` / `animate()` | `bool` | `true` |
+| `smoothScroll` / `smoothScroll()` | `bool` | `false` |
+| `allowClose` / `allowClose()` | `bool` | `true` |
+| `allowScroll` / `allowScroll()` | `bool` | `false` |
+| `allowKeyboardControl` / `allowKeyboardControl()` | `bool` | `true` |
+| `disableActiveInteraction` / `disableActiveInteraction()` | `bool` | `false` |
+| `duration` / `duration()` | `int` ms | `500` |
+| `overlayColor` / `overlayColor()` | `string` | `#000` |
+| `overlayOpacity` / `overlayOpacity()` | `float` | `0.7` |
+| `overlayClickBehavior` / `overlayClickBehavior()` | `close` or `nextStep` | `close` |
+| `stagePadding` / `stagePadding()` | `int` | `10` |
+| `stageRadius` / `stageRadius()` | `int` | `5` |
 | `popoverClass` / `popoverClass()` | `string` | none |
-| `popoverOffset` / `popoverOffset()` | `int` | Driver.js default `10` |
-| `showButtons` / `showButtons()` | list of `next`, `previous`, `close` | Driver.js default all |
-| `disableButtons` / `disableButtons()` | list of `next`, `previous`, `close` | Driver.js default none |
-| `progressText` / `progressText()` | `string` or trusted markup | Driver.js default `{{current}} of {{total}}` |
-| `nextBtnText` / `nextBtnText()` | `string` or trusted markup | Driver.js default `Next &rarr;` |
-| `prevBtnText` / `prevBtnText()` | `string` or trusted markup | Driver.js default `&larr; Previous` |
-| `doneBtnText` / `doneBtnText()` | `string` or trusted markup | Driver.js default `Done` |
-| `once` / `once()` | `bool` | bundle `false`; not a Driver.js option |
-| `autostart` | `bool` | bundle `false`; component prop only |
+| `popoverOffset` / `popoverOffset()` | `int` | `10` |
+| `showButtons` / `showButtons()` | list of `next`, `previous`, `close` | all |
+| `disableButtons` / `disableButtons()` | list of `next`, `previous`, `close` | none |
+| `progressText` / `progressText()` | `string` or trusted markup | `{{current}} of {{total}}` |
+| `nextBtnText` / `nextBtnText()` | `string` or trusted markup | `Next →` |
+| `prevBtnText` / `prevBtnText()` | `string` or trusted markup | `← Previous` |
+| `doneBtnText` / `doneBtnText()` | `string` or trusted markup | `Done` |
+| `once` / `once()` <Badge tone="bundle">Bundle</Badge> | `bool` | `false` |
+| `autostart` <Badge tone="bundle">Bundle</Badge> | `bool` | `false`; component prop only |
 
-Callback options are not exposed because PHP and Twig cannot serialize JavaScript functions. Use Stimulus events instead.
+The four text options are escaped before serialization — see [Security](/guides/security/) — and a Step can
+override any of them for itself ([Step reference](/reference/step/)).
+
+<Aside type="note" title="Callbacks are not serializable">
+Driver.js callback options (`onNextClick`, `onHighlighted`, and the rest) have no PHP representation, so
+the bundle does not expose them. It emits DOM events instead, including cancelable ones that replace the
+click hooks. See [Events](/guides/events/).
+</Aside>
 
 ## Methods
 
-| Method | Description |
+| Method | Returns |
 | --- | --- |
-| `addStep()` | Appends a Step to the Tour |
-| `getSteps()` | Returns serialized Driver.js steps |
-| `getOptions()` | Returns serialized Driver.js config |
-| `isOnce()` | Returns the bundle persistence flag |
+| `addStep()` | `$this`, with the Step appended |
+| `getSteps()` | Serialized Driver.js steps |
+| `getOptions()` | Serialized Driver.js config |
+| `isOnce()` | The bundle persistence flag |
 
-`ux_tour(tour)` renders controller attributes with `autostart=false`.
+## Twig functions
 
-`ux_highlight(element, title, description, side, align, options)` renders a one-step Tour for the `highlight` action.
+| Function | Renders |
+| --- | --- |
+| `create_tour(id)` | A new Tour, for chaining in a template |
+| `ux_tour(tour)` | Controller attributes, always with `autostart=false` |
+| `ux_highlight(element, title, description, side, align, options)` | A one-Step Tour for the `highlight` action |
+| `ux_driver_html(html)` | A string marked as trusted markup |
+
+`ux_highlight()` has its own page: [Highlights](/guides/highlights/).

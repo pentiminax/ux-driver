@@ -1,58 +1,82 @@
 ---
 title: Events
-description: Listen to UX Driver lifecycle events from application JavaScript.
-order: 6
+description: React to Tour and Hints lifecycle events, and cancel the ones that matter.
+order: 7
 ---
 
-# Events
+import Aside from '../../../components/Aside.astro'
 
-UX Driver bridges Driver.js callbacks into DOM events so server-rendered Tours and Hints stay observable.
+Driver.js exposes its lifecycle through callbacks, which a server-rendered Tour has no place to attach.
+UX Driver bridges them into DOM events on `document` instead, so application JavaScript can observe a Tour
+without ever constructing one.
 
-## Tour events
+The complete list — nine Tour events, six Hints events, every `detail` payload — is in the
+[Stimulus reference](/reference/stimulus/). This page is about what to do with them.
 
-Tour setup events:
+## Blocking a navigation
 
-| Event | Cancelable | Detail |
-| --- | --- | --- |
-| `ux-driver:pre-connect` | no | `{config}` |
-| `ux-driver:connect` | no | `{driver}` |
-| `ux-driver:empty` | no | `{id}` |
+Five Tour events are cancelable: `ux-driver:next`, `ux-driver:previous`, `ux-driver:close`,
+`ux-driver:done`, and `ux-driver:destroy-started`. Calling `preventDefault()` on one stops the default
+behavior the controller would otherwise run — `moveNext()`, `movePrevious()`, `destroy()`, or completion.
 
-Tour lifecycle events:
-
-| Event | Cancelable | Detail |
-| --- | --- | --- |
-| `ux-driver:highlight-started` | no | `{tourId, index, step, element, driver}` |
-| `ux-driver:highlighted` | no | `{tourId, index, step, element, driver}` |
-| `ux-driver:deselected` | no | `{tourId, index, step, element, driver}` |
-| `ux-driver:destroyed` | no | `{tourId, index, step, element, driver}` |
-| `ux-driver:next` | yes | `{tourId, index, step, element, driver}` |
-| `ux-driver:previous` | yes | `{tourId, index, step, element, driver}` |
-| `ux-driver:close` | yes | `{tourId, index, step, element, driver}` |
-| `ux-driver:done` | yes | `{tourId, index, step, element, driver}` |
-| `ux-driver:destroy-started` | yes | `{tourId, index, step, element, driver}` |
-
-The cancelable events replace Driver.js click hooks in the controller. If a listener calls `preventDefault()`, UX Driver does not run the default `moveNext()`, `movePrevious()`, `destroy()`, or completion action.
-
-## Hints events
-
-| Event | Cancelable | Detail |
-| --- | --- | --- |
-| `ux-driver:hints-pre-connect` | no | `{config}` |
-| `ux-driver:hints-connect` | no | `{hints}` |
-| `ux-driver:empty` | no | `{id}` |
-| `ux-driver:hint-open` | no | `{groupId, hintId, hint, element, data, hints}` |
-| `ux-driver:hint-dismiss` | no | `{groupId, hintId, hint, element, data, hints}` |
-| `ux-driver:hint-button-click` | no | `{groupId, hintId, hint, element, data, hints}` |
-
-Hint events do not cancel Driver.js behavior.
-
-## Listener example
+That makes a Step into a gate:
 
 ```js
 document.addEventListener('ux-driver:next', (event) => {
-  if (!document.querySelector('form')?.reportValidity()) {
+  const { tourId, index } = event.detail
+
+  if (tourId === 'checkout-tour' && index === 1 && !form.reportValidity()) {
     event.preventDefault()
   }
 })
 ```
+
+The Tour stays where it is, the form shows its own validation, and no Driver.js API was touched.
+
+<Aside type="warning" title="Cancelling `done` cancels `once`">
+`ux-driver:done` is the event that writes the seen flag. Prevent it and the Tour is never marked as seen,
+so a `once` Tour comes back on the next page load. See
+[Control and persistence](/guides/control-and-persistence/).
+</Aside>
+
+## Reacting to progress
+
+The non-cancelable events are for observation — analytics, lazy loading, syncing another panel:
+
+```js
+document.addEventListener('ux-driver:highlighted', (event) => {
+  const { tourId, index, element } = event.detail
+
+  analytics.track('tour_step_viewed', { tour: tourId, step: index })
+  element.scrollIntoView({ block: 'nearest' })
+})
+```
+
+Every Tour event after connect carries the same shape: `{tourId, index, step, element, driver}`. The
+`driver` handle is the live Driver.js instance, which is the escape hatch for anything the bundle does not
+serialize.
+
+## Hints
+
+Hints events are never cancelable — they report what happened, they do not gate it:
+
+```js
+document.addEventListener('ux-driver:hint-dismiss', (event) => {
+  const { groupId, hintId } = event.detail
+
+  fetch('/preferences/hints', {
+    method: 'POST',
+    body: JSON.stringify({ group: groupId, hint: hintId }),
+  })
+})
+```
+
+That listener is also how a dismissal is made to last: the bundle does not persist dismissed Hints, so
+recording it server-side and re-rendering the group without that Hint is the durable version.
+
+## Timing
+
+`ux-driver:pre-connect` fires before the Driver.js instance exists and carries the configuration about to
+be used — mutate it there if a Tour needs a runtime value. `ux-driver:connect` fires once the instance is
+built. `ux-driver:empty` fires when a controller connects with nothing to show, which usually means a
+selector matched no element.

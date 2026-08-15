@@ -1,26 +1,46 @@
 ---
 import '../styles/global.css'
-import { withBase } from '../nav'
+import Icon from '../components/Icon.astro'
+import SearchDialog from '../components/SearchDialog.astro'
+import { sections, withBase } from '../nav'
 
 interface Props {
   title: string
   description: string
+  /** Full-bleed pages (home, 404) opt out of the documentation grid. */
+  wide?: boolean
 }
 
-const { title, description } = Astro.props
-const canonicalPath = Astro.url.pathname
-const homeUrl = withBase()
-const installationUrl = withBase('getting-started/installation/')
+const { title, description, wide = false } = Astro.props
+const canonical = new URL(Astro.url.pathname, Astro.site)
 const repoUrl = 'https://github.com/pentiminax/ux-driver'
+const sectionEntries = [
+  { id: 'getting-started', href: withBase('getting-started/') },
+  { id: 'guides', href: withBase('guides/') },
+  { id: 'reference', href: withBase('reference/') },
+].map((entry) => ({ ...entry, title: sections.find((section) => section.id === entry.id)!.title }))
+const currentSection = Astro.url.pathname.replace(import.meta.env.BASE_URL, '').split('/')[0]
 ---
 
 <!doctype html>
 <html lang="en" data-base-url={import.meta.env.BASE_URL}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <link rel="canonical" href={new URL(canonicalPath, Astro.site)} />
+    <meta name="theme-color" content="#f7f9fc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="UX Driver" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -29,115 +49,167 @@ const repoUrl = 'https://github.com/pentiminax/ux-driver'
     />
     <title>{title}</title>
     <script is:inline>
+      // Runs before first paint so the page never flashes the wrong theme.
       try {
-        const storedTheme = localStorage.getItem('theme')
-        const systemDark = matchMedia('(prefers-color-scheme: dark)').matches
-        document.documentElement.dataset.theme = storedTheme || (systemDark ? 'dark' : 'light')
-      } catch {
-        document.documentElement.dataset.theme = 'light'
-      }
+        const stored = localStorage.getItem('theme')
+        if (stored === 'dark' || stored === 'light') document.documentElement.dataset.theme = stored
+      } catch {}
     </script>
   </head>
   <body>
+    <!--
+      THESIS: A Symfony bundle's docs are read while the reader's editor is open,
+      so this site refuses the marketing-doc arrangement — no hero on a reference
+      page, no decorative chrome between the reader and the next code block. The
+      one idea it owns: the shortest path from a question to a working Twig tag.
+      OWN-WORLD: indigo #5B5BD6 as the single accent, spotlight amber #F4D35E
+      reserved for focus and Driver.js-native marks, Symfony crimson only where
+      Symfony itself is meant, on navy-slate neutrals. Familjen Grotesk headings,
+      Source Sans 3 prose, JetBrains Mono code. Flat surfaces, 1px borders,
+      tinted callouts — no colored left bars, no glyph icons.
+      STORY: the reader arrives on a question, sees where they are (breadcrumb,
+      section, ToC), gets a copyable answer, and is handed the next page.
+      FIRST VIEWPORT: sticky header with the three sections and search; below it
+      sidebar / prose / ToC. On a doc page the title, its one-line summary, and
+      the first code block are all above the fold. The primary action is Search.
+      FORM: documentation shell, first on the ordered list for a Read surface.
+      No seed key — this refines the incumbent visual world rather than replacing it.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
     <header class="site-header">
-      <a class="brand" href={homeUrl} aria-label="UX Driver home">
-        <span class="brand-mark"></span>
-        <span>UX Driver</span>
-      </a>
-      <nav class="top-nav" aria-label="Primary navigation">
-        <a href={installationUrl}>Docs</a>
-        <a href={`${installationUrl}#composer-install`}>Install</a>
-      </nav>
-      <button class="search-trigger" type="button" data-search-trigger aria-label="Open search">
-        Search <kbd>⌘K</kbd>
-      </button>
-      <button class="theme-toggle" type="button" aria-label="Toggle theme" data-theme-toggle>◐</button>
-      <a class="github-link" href={repoUrl}>GitHub</a>
+      <div class="site-header-inner">
+        <a class="brand" href={withBase()} aria-label="UX Driver home">
+          <span class="brand-mark"></span>
+          <span>UX Driver</span>
+        </a>
+
+        <nav class="top-nav" aria-label="Sections">
+          {
+            sectionEntries.map((entry) => (
+              <a href={entry.href} aria-current={entry.id === currentSection ? 'true' : undefined}>
+                {entry.title}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div class="header-actions">
+          <button class="search-trigger" type="button" data-search-trigger>
+            <Icon name="search" size={16} />
+            <span class="search-trigger-label">Search</span>
+            <kbd>⌘K</kbd>
+          </button>
+
+          <button
+            class="icon-button theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-pressed="false"
+            aria-label="Switch to dark theme"
+          >
+            <Icon name="sun" size={18} class="theme-icon-light" />
+            <Icon name="moon" size={18} class="theme-icon-dark" />
+          </button>
+
+          <a class="icon-button" href={repoUrl} aria-label="UX Driver on GitHub">
+            <Icon name="github" size={18} />
+          </a>
+        </div>
+      </div>
     </header>
 
-    <dialog class="search-dialog" data-search-dialog aria-label="Search documentation">
-      <form method="dialog">
-        <button type="submit" aria-label="Close search">×</button>
-      </form>
-      <label for="site-search">Search docs</label>
-      <input id="site-search" type="search" data-pagefind-search placeholder="Tour, highlight, hints" />
-      <div class="search-results" data-search-results aria-live="polite"></div>
-    </dialog>
+    <SearchDialog />
 
-    <main>
+    <main id="main" class:list={['site-main', wide && 'site-main-wide']}>
       <slot />
     </main>
 
     <footer class="site-footer">
-      <a href="https://www.npmjs.com/package/@pentiminax/ux-driver">Package</a>
-      <a href={repoUrl}>GitHub</a>
-      <a href={`${repoUrl}/blob/main/LICENSE`}>License</a>
+      <div class="site-footer-inner">
+        <p>
+          <span class="brand-mark"></span>
+          UX Driver — Driver.js tours, highlights, and hints for Symfony.
+        </p>
+        <nav aria-label="Footer">
+          <a href={withBase('getting-started/installation/')}>Installation</a>
+          <a href="https://www.npmjs.com/package/@pentiminax/ux-driver">npm</a>
+          <a href={repoUrl}>GitHub</a>
+          <a href={`${repoUrl}/blob/main/LICENSE`}>License</a>
+        </nav>
+      </div>
     </footer>
 
     <script>
       const root = document.documentElement
-      const themeToggle = document.querySelector('[data-theme-toggle]')
-      themeToggle?.addEventListener('click', () => {
-        const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
-        root.dataset.theme = next
-        localStorage.setItem('theme', next)
+      const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')
+
+      const syncToggle = () => {
+        const dark =
+          root.dataset.theme === 'dark' ||
+          (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches)
+        toggle?.setAttribute('aria-pressed', String(dark))
+        toggle?.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme')
+      }
+
+      syncToggle()
+
+      toggle?.addEventListener('click', () => {
+        const dark = toggle.getAttribute('aria-pressed') === 'true'
+        root.dataset.theme = dark ? 'light' : 'dark'
+        try {
+          localStorage.setItem('theme', root.dataset.theme)
+        } catch {}
+        syncToggle()
       })
 
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncToggle)
+
+      const copyIcon =
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A1.5 1.5 0 0 0 13.5 4H6a2 2 0 0 0-2 2v7.5A1.5 1.5 0 0 0 5.5 15"/></svg>'
+      const checkIcon =
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'
+
       document.querySelectorAll('pre').forEach((pre) => {
+        const frame = document.createElement('div')
+        frame.className = 'code-block'
+        const language = pre.dataset.language
+        if (language && language !== 'plaintext') frame.dataset.language = language
+
+        pre.replaceWith(frame)
+        frame.append(pre)
+
         const button = document.createElement('button')
         button.type = 'button'
         button.className = 'copy-code'
-        button.textContent = 'Copy'
+        button.innerHTML = copyIcon
+        button.setAttribute('aria-label', 'Copy code')
+
+        const feedback = document.createElement('span')
+        feedback.className = 'visually-hidden'
+        feedback.setAttribute('aria-live', 'polite')
+
+        let reset: number | undefined
         button.addEventListener('click', async () => {
-          await navigator.clipboard.writeText(pre.querySelector('code')?.textContent || pre.textContent || '')
-          button.textContent = 'Copied'
-          setTimeout(() => {
-            button.textContent = 'Copy'
-          }, 1200)
+          try {
+            await navigator.clipboard.writeText(pre.querySelector('code')?.textContent ?? pre.textContent ?? '')
+          } catch {
+            feedback.textContent = 'Copy failed — copy the block manually.'
+            return
+          }
+          button.innerHTML = checkIcon
+          button.classList.add('is-copied')
+          feedback.textContent = 'Copied to clipboard'
+          clearTimeout(reset)
+          reset = window.setTimeout(() => {
+            button.innerHTML = copyIcon
+            button.classList.remove('is-copied')
+            feedback.textContent = ''
+          }, 1600)
         })
-        pre.append(button)
-      })
 
-      const dialog = document.querySelector('[data-search-dialog]') as HTMLDialogElement | null
-      const trigger = document.querySelector('[data-search-trigger]')
-      const input = document.querySelector('[data-pagefind-search]') as HTMLInputElement | null
-      const results = document.querySelector('[data-search-results]')
-      let pagefind: any
-      const importPagefind = new Function('path', 'return import(path)')
-
-      async function openSearch() {
-        dialog?.showModal()
-        input?.focus()
-      }
-
-      trigger?.addEventListener('click', openSearch)
-      document.addEventListener('keydown', (event) => {
-        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-          event.preventDefault()
-          openSearch()
-        }
-      })
-
-      input?.addEventListener('input', async () => {
-        if (!results || !input.value.trim()) {
-          if (results) results.textContent = ''
-          return
-        }
-        const pagefindUrl = new URL(`${root.dataset.baseUrl}pagefind/pagefind.js`, window.location.origin)
-        pagefind ||= await importPagefind(pagefindUrl.href)
-        const search = await pagefind.search(input.value)
-        const fragments = await Promise.all(search.results.slice(0, 6).map((result: any) => result.data()))
-        results.textContent = ''
-        for (const fragment of fragments) {
-          const link = document.createElement('a')
-          link.href = fragment.url
-          link.textContent = fragment.meta.title || fragment.url
-          const excerpt = document.createElement('p')
-          excerpt.textContent = fragment.excerpt.replace(/<[^>]+>/g, '')
-          const item = document.createElement('div')
-          item.append(link, excerpt)
-          results.append(item)
-        }
+        frame.append(button, feedback)
       })
     </script>
   </body>

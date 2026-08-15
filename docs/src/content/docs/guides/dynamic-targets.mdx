@@ -1,58 +1,79 @@
 ---
 title: Dynamic targets
-description: Handle Turbo Frames, modals, and missing elements in Tours and Hints.
-order: 8
+description: Point Steps at elements that appear late, or never appear at all.
+order: 9
 ---
 
-# Dynamic targets
+import Aside from '../../../components/Aside.astro'
 
-Driver.js 1.8 supports waiting for Tour targets that appear after the Tour starts.
+A selector-based Step assumes its target is in the DOM when the Tour reaches it. Turbo Frames, modals, and
+lazily rendered panels break that assumption. Driver.js 1.8 gives two Step options for it, and UX Driver
+passes both through.
 
 ## Wait for an element
 
-Use `waitForElement` on a builder-authored step when a Turbo Frame or modal renders the target asynchronously:
+`waitForElement` takes a timeout in milliseconds. The Tour pauses on that Step until the selector matches
+or the timeout expires:
 
 ```twig
 {% set tour = create_tour('invoice-tour')
-    .addStep('#invoice-preview', 'Invoice preview', 'This appears after the modal opens', options: {
+    .addStep('#open-invoice', 'Invoices', 'Open one to see the preview')
+    .addStep('#invoice-preview', 'Preview', 'This renders after the modal opens', options: {
         waitForElement: 2000,
     }) %}
 
-<div {{ ux_tour(tour) }}></div>
+<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+    Start tour
+</button>
 ```
 
-PHP uses the same selector-based option:
+The same option in PHP:
 
 ```php
-$tour->addStep('#invoice-preview', 'Invoice preview', 'This appears after the modal opens', options: [
+$tour->addStep('#invoice-preview', 'Preview', 'This renders after the modal opens', options: [
     'waitForElement' => 2000,
 ]);
 ```
 
-## Skip missing targets
+## Skip a missing target
 
-Set `skipMissingElement` when the Tour should continue if the selector target never appears:
+`skipMissingElement` lets the Tour move on rather than stall when a selector never matches — the shape for
+Steps that only exist for some roles:
 
 ```twig
 {% set tour = create_tour('admin-tour')
-    .addStep('.export', 'Optional export', 'Only admins see this control', options: {
+    .addStep('.orders', 'Orders', 'Every account sees this')
+    .addStep('.export', 'Export', 'Only admins see this control', options: {
         skipMissingElement: true,
     }) %}
 
-<div {{ ux_tour(tour) }}></div>
+<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+    Start tour
+</button>
 ```
 
-Without `skipMissingElement`, a missing target can leave the Tour waiting on that step.
+Without it, a missing target leaves the Tour waiting on that Step with nothing to highlight.
 
-Declarative `<twig:Driver:Step>` targets the component host element that already rendered in the page. Use declarative mode only when that host exists before the Tour resolves; use builder-authored selector steps for async selector semantics.
+<Aside type="note" title="Both options are builder-only">
+`<twig:Driver:Step>` wraps the element it describes, so its target has already rendered by definition —
+there is nothing to wait for. Async targets need selector-based Steps from a builder. See
+[Authoring modes](/guides/authoring-modes/).
+</Aside>
 
-## Refresh
+## Refresh after a layout shift
 
-After Turbo, a modal animation, or a layout shift changes positions, call `refresh` on the active controller:
+Neither option helps once a Tour is already running and the page moves under it — a Turbo render, a modal
+animation, a lazily loaded image. `refresh` recomputes the overlay and popover position against the
+current DOM:
 
 ```twig
 <button data-action="pentiminax--ux-driver--tour#refresh">Refresh tour</button>
 <button data-action="pentiminax--ux-driver--hints#refresh">Refresh hints</button>
 ```
 
-Hints do not expose `waitForElement` or `skipMissingElement` through this bundle. Render Hint targets when the Hints controller connects, or call `show` after the target exists.
+## Hints
+
+Hints expose neither `waitForElement` nor `skipMissingElement` through this bundle. Either render Hint
+targets before the Hints controller connects, or start the group with `:autostart="false"` and fire
+`show` once the targets exist. [Control and persistence](/guides/control-and-persistence/) has both
+actions.

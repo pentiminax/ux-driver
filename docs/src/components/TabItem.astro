@@ -6,7 +6,7 @@ interface Props {
 const { label } = Astro.props
 ---
 
-<section class="tab-panel">
-  <h3>{label}</h3>
+<section class="tab-panel" data-tab-panel={label}>
+  <p class="tab-panel-label" data-tab-label>{label}</p>
   <slot />
 </section>

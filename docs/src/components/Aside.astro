@@ -1,13 +1,31 @@
 ---
+import Icon from './Icon.astro'
+import type { IconName } from './Icon.astro'
+
 interface Props {
-  type?: 'note' | 'tip' | 'warning'
+  type?: 'note' | 'tip' | 'warning' | 'danger'
   title?: string
 }
 
-const { type = 'note', title = type[0].toUpperCase() + type.slice(1) } = Astro.props
+const { type = 'note', title } = Astro.props
+
+const defaults: Record<NonNullable<Props['type']>, { title: string; icon: IconName }> = {
+  note: { title: 'Note', icon: 'note' },
+  tip: { title: 'Tip', icon: 'tip' },
+  warning: { title: 'Watch out', icon: 'warning' },
+  danger: { title: 'Security', icon: 'danger' },
+}
+
+// Titles name options and functions, so they carry Markdown code spans.
+const segments = (title ?? defaults[type].title).split('`')
 ---
 
-<aside class={`aside aside-${type}`}>
-  <strong>{title}</strong>
-  <slot />
+<aside class:list={['aside', `aside-${type}`]}>
+  <p class="aside-title">
+    <Icon name={defaults[type].icon} size={18} />
+    {segments.map((segment, i) => (i % 2 === 1 ? <code>{segment}</code> : segment))}
+  </p>
+  <div class="aside-body">
+    <slot />
+  </div>
 </aside>

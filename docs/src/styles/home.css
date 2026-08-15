@@ -1,0 +1,347 @@
+/*
+ * Home page only. The rest of the site is a Read surface; this one page is
+ * allowed to persuade, so it gets the wide grid, the live demo, and the only
+ * display-size heading in the build.
+ */
+@layer components {
+  .hero {
+    align-items: center;
+    display: grid;
+    gap: var(--space-12);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    padding-block: var(--space-20) var(--space-16);
+  }
+
+  .hero h1 {
+    font-size: var(--text-4xl);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+    margin: 0;
+    max-width: 14ch;
+  }
+
+  .hero-lede {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    margin: var(--space-6) 0 0;
+    max-width: 46ch;
+    text-wrap: pretty;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+
+  .hero-install {
+    margin-top: var(--space-8);
+  }
+
+  /* ---- Live demo ------------------------------------------------------ */
+  .demo {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2);
+    padding: var(--space-4);
+  }
+
+  .demo-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .demo-toolbar button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: var(--space-2) var(--space-4);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+
+  .demo-toolbar button:hover {
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+
+  /* The scene stays dark in both themes: it stands in for an application
+     screenshot, and Driver.js overlays read against a dark stage. */
+  .demo-scene {
+    background: var(--surface-inverse);
+    border-radius: var(--radius-md);
+    color: var(--text-inverse);
+    display: grid;
+    font-size: var(--text-sm);
+    gap: var(--space-3);
+    grid-template-columns: 8rem minmax(0, 1fr);
+    padding: var(--space-4);
+  }
+
+  .demo-rail {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .demo-rail strong {
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    opacity: 0.6;
+    text-transform: uppercase;
+  }
+
+  .demo-rail span {
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .demo-rail span:first-of-type {
+    background: color-mix(in srgb, var(--indigo-400) 26%, transparent);
+  }
+
+  .demo-main {
+    display: grid;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .demo-header {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .demo-header span {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    margin-right: auto;
+  }
+
+  .demo-header button {
+    background: color-mix(in srgb, var(--slate-0) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--slate-0) 16%, transparent);
+    border-radius: var(--radius-sm);
+    color: inherit;
+    font: inherit;
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+    pointer-events: none;
+  }
+
+  .demo-grid {
+    border: 1px solid color-mix(in srgb, var(--slate-0) 12%, transparent);
+    border-radius: var(--radius-md);
+    display: grid;
+  }
+
+  .demo-grid > div {
+    display: grid;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    gap: var(--space-2);
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .demo-grid > div + div {
+    border-top: 1px solid color-mix(in srgb, var(--slate-0) 12%, transparent);
+  }
+
+  .demo-panel {
+    background: color-mix(in srgb, var(--amber-300) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--amber-300) 34%, transparent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+
+  .demo-panel strong {
+    display: block;
+    font-family: var(--font-display);
+  }
+
+  .demo-panel p {
+    margin: var(--space-1) 0 0;
+    opacity: 0.85;
+  }
+
+  .demo-noscript {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: var(--space-3) 0 0;
+  }
+
+  /* ---- Sections ------------------------------------------------------- */
+  .home-section {
+    border-top: 1px solid var(--border);
+    padding-block: var(--space-16);
+  }
+
+  .home-section > h2 {
+    font-size: var(--text-2xl);
+    margin: 0 0 var(--space-8);
+  }
+
+  .mode-cards,
+  .home-sections {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: inherit;
+    display: block;
+    padding: var(--space-6);
+    text-decoration: none;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .mode-card:hover {
+    border-color: var(--accent-border);
+    transform: translateY(-2px);
+  }
+
+  .mode-card h3 {
+    font-size: var(--text-lg);
+    margin: 0;
+  }
+
+  .mode-card p {
+    color: var(--text-muted);
+    margin: var(--space-3) 0 var(--space-5);
+    text-wrap: pretty;
+  }
+
+  .mode-card-cue {
+    align-items: center;
+    color: var(--accent);
+    display: inline-flex;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    gap: var(--space-2);
+  }
+
+  .mode-card:hover .mode-card-cue .icon {
+    transform: translateX(2px);
+  }
+
+  .mode-card-cue .icon {
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  /* ---- Twig-first ----------------------------------------------------- */
+  .twig-first {
+    align-items: start;
+    display: grid;
+    gap: var(--space-10);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+
+  .twig-first h2 {
+    font-size: var(--text-2xl);
+    margin: 0 0 var(--space-5);
+  }
+
+  .twig-first-copy p {
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+    max-width: 48ch;
+    text-wrap: pretty;
+  }
+
+  /* ---- Section index cards -------------------------------------------- */
+  .home-section-card {
+    border-top: 2px solid var(--accent);
+    padding-top: var(--space-5);
+  }
+
+  .home-section-title {
+    align-items: center;
+    color: var(--text);
+    display: inline-flex;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    gap: var(--space-2);
+    text-decoration: none;
+  }
+
+  .home-section-title:hover {
+    color: var(--accent);
+  }
+
+  .home-section-card > p {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: var(--space-2) 0 var(--space-4);
+    text-wrap: pretty;
+  }
+
+  .home-section-card ul {
+    display: grid;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .home-section-card a:not(.home-section-title) {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+  }
+
+  .home-section-card a:not(.home-section-title):hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 999px) {
+    .hero,
+    .twig-first {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero {
+      gap: var(--space-10);
+      padding-block: var(--space-12) var(--space-10);
+    }
+
+    .hero h1 {
+      max-width: none;
+    }
+
+    .home-section {
+      padding-block: var(--space-12);
+    }
+  }
+
+  @media (max-width: 599px) {
+    .demo-scene {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .demo-rail {
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
+      overflow-x: auto;
+    }
+  }
+}

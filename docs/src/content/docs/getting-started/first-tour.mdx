@@ -1,15 +1,20 @@
 ---
-title: First tour
+title: First Tour
 description: Build a Twig-first product tour and start it from a button.
 order: 2
 ---
 
-# First tour
+import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
-Use Twig Components when the tour describes elements already present in the template.
+A Tour is an ordered list of Steps. Each Step points at one element and carries the popover text shown
+when the Tour reaches it. Here is a three-Step Tour over an orders screen, written both ways.
 
+<Tabs>
+<TabItem label="Twig Components">
 ```twig
-<twig:Driver:Tour id="orders-tour" :once="true" :showProgress="true">
+<twig:Driver:Tour id="orders-tour" :once="true">
     <button type="button" data-action="pentiminax--ux-driver--tour#start">
         Start tour
     </button>
@@ -28,25 +33,50 @@ Use Twig Components when the tour describes elements already present in the temp
 </twig:Driver:Tour>
 ```
 
-## Start behavior
+Each `<twig:Driver:Step>` wraps the element it describes, so the Tour reads top to bottom like the page does.
+</TabItem>
 
-`autostart` defaults to `false` for Tours. Start a tour with `data-action="pentiminax--ux-driver--tour#start"`, or set `:autostart="true"` on `<twig:Driver:Tour>`.
-
-`once` is a bundle option, not a Driver.js option. After successful completion, future starts return early until storage is cleared. That includes autostart and a manual `Start tour` trigger.
-
-## Builder alternative
-
-Use the builder when the steps are easier to assemble in PHP or Twig variables:
-
+<TabItem label="Builder">
 ```twig
 {% set tour = create_tour('orders-tour')
     .addStep('.orders-title', 'Orders', 'Review current customer orders')
     .addStep('.filters', 'Filters', 'Narrow the list before export')
+    .addStep('.export', 'Done', 'Export the filtered result', 'left')
     .once() %}
 
-<button {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
     Start tour
 </button>
 ```
 
-Both modes serialize the same Driver.js config for the Stimulus controller.
+The builder addresses elements by selector, so the Steps do not have to sit inside the markup they explain.
+</TabItem>
+</Tabs>
+
+Both modes serialize the same Driver.js configuration for the same Stimulus controller.
+[Authoring modes](/guides/authoring-modes/) covers how to choose.
+
+## Starting the Tour
+
+Tours wait for an explicit trigger. Either put the Stimulus action on a control inside the Tour, as above:
+
+```twig
+<button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+```
+
+…or set `:autostart="true"` and let the Tour run when the controller connects.
+
+<Aside type="note" title="`once` is a UX Driver option, not a Driver.js one">
+With `:once="true"`, a Tour that reaches completion is never shown again — autostart and manual triggers
+both return early. Abandoning it does not count.
+[Control and persistence](/guides/control-and-persistence/) has the storage key and the failure modes.
+</Aside>
+
+## Tuning the popovers
+
+`showProgress` is already on for Tours declared through UX Driver, so `1 of 3` appears without asking.
+Everything else — button labels, overlay color, stage padding, placement — is a Tour or Step option:
+
+- [Tour reference](/reference/tour/) — the 20-odd options that apply to the whole walkthrough.
+- [Step reference](/reference/step/) — per-Step placement, buttons, and async targets.
+- [Styling and localization](/guides/styling-and-localization/) — translated labels and custom popover CSS.

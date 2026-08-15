@@ -1,0 +1,68 @@
+---
+import Breadcrumb from '../../components/Breadcrumb.astro'
+import DocsDrawer from '../../components/DocsDrawer.astro'
+import DocsNav from '../../components/DocsNav.astro'
+import Icon from '../../components/Icon.astro'
+import Layout from '../../layouts/Layout.astro'
+import { getDocsNavSections, sections, withBase } from '../../nav'
+
+export async function getStaticPaths() {
+  const groups = await getDocsNavSections()
+
+  return groups.map((group) => ({
+    params: { section: group.section.id },
+    props: { group },
+  }))
+}
+
+const { group } = Astro.props
+const { section, items } = group
+---
+
+<Layout title={`${section.title} | UX Driver`} description={section.description}>
+  <DocsDrawer currentSlug={section.id} currentTitle="Overview" sectionTitle={section.title} />
+
+  <div class="doc-shell doc-shell-index">
+    <aside class="doc-sidebar">
+      <DocsNav currentSlug={section.id} />
+    </aside>
+
+    <article class="doc-article" data-pagefind-body>
+      <header class="doc-header">
+        <Breadcrumb trail={[{ label: section.title }]} />
+        <h1>{section.title}</h1>
+        <p class="doc-lede">{section.description}</p>
+      </header>
+
+      <ol class="section-index">
+        {
+          items.map((item, position) => (
+            <li>
+              <a href={withBase(`${item.slug}/`)}>
+                <span class="section-index-rank">{String(position + 1).padStart(2, '0')}</span>
+                <span class="section-index-body">
+                  <span class="section-index-title">{item.title}</span>
+                  <span class="section-index-description">{item.description}</span>
+                </span>
+                <Icon name="arrow-right" size={18} class="section-index-arrow" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <nav class="section-jump" aria-label="Other sections">
+        {
+          sections
+            .filter((other) => other.id !== section.id)
+            .map((other) => (
+              <a href={withBase(`${other.id}/`)}>
+                <span class="section-jump-title">{other.title}</span>
+                <span class="section-jump-description">{other.description}</span>
+              </a>
+            ))
+        }
+      </nav>
+    </article>
+  </div>
+</Layout>

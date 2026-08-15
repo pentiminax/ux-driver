@@ -1,0 +1,102 @@
+@layer prose {
+  /* Vertical rhythm belongs to the article, not to the document: the header,
+     the sidebar and the search results set their own spacing. */
+  .doc-article {
+    font-size: var(--text-md);
+    line-height: var(--leading-prose);
+  }
+
+  .doc-article :where(h2, h3, h4) {
+    scroll-margin-top: calc(var(--header-h) + var(--space-6));
+  }
+
+  .doc-article h2 {
+    border-top: 1px solid var(--border);
+    font-size: var(--text-2xl);
+    margin: var(--space-16) 0 var(--space-4);
+    padding-top: var(--space-8);
+  }
+
+  .doc-article h3 {
+    font-size: var(--text-xl);
+    margin: var(--space-10) 0 var(--space-3);
+  }
+
+  .doc-article h4 {
+    font-size: var(--text-md);
+    margin: var(--space-6) 0 var(--space-2);
+  }
+
+  .doc-article :where(h2, h3, h4) + * {
+    margin-top: 0;
+  }
+
+  .doc-article p {
+    margin-block: var(--space-4);
+    text-wrap: pretty;
+  }
+
+  .doc-article :where(ul, ol):not(.steps, .tablist, .toc ul) {
+    margin-block: var(--space-4);
+    padding-left: var(--space-6);
+  }
+
+  .doc-article li + li {
+    margin-top: var(--space-2);
+  }
+
+  .doc-article li::marker {
+    color: var(--text-subtle);
+  }
+
+  .doc-article strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .doc-article :not(pre) > code {
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875em;
+    padding: 0.1em 0.35em;
+  }
+
+  .doc-article blockquote {
+    border-left: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    margin-inline: 0;
+    padding-left: var(--space-5);
+  }
+
+  .doc-article hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin-block: var(--space-12);
+  }
+
+  /* The anchor is a target for people who want a link, not a permanent glyph
+     stapled to every heading. */
+  .heading-anchor {
+    color: var(--text-subtle);
+    margin-left: var(--space-2);
+    opacity: 0;
+    text-decoration: none;
+    transition: opacity var(--duration-fast) var(--ease-out);
+  }
+
+  .heading-anchor::after {
+    content: '#';
+  }
+
+  :where(h1, h2, h3, h4):hover > .heading-anchor,
+  .heading-anchor:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .heading-anchor {
+      opacity: 1;
+    }
+  }
+}

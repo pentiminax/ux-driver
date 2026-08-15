@@ -1,0 +1,40 @@
+---
+import Icon from './Icon.astro'
+import type { NavItem } from '../nav'
+import { withBase } from '../nav'
+
+interface Props {
+  previous?: NavItem
+  next?: NavItem
+}
+
+const { previous, next } = Astro.props
+---
+
+{
+  (previous || next) && (
+    <nav class="pager" aria-label="Previous and next pages">
+      {previous ? (
+        <a class="pager-link pager-prev" href={withBase(`${previous.slug}/`)} rel="prev">
+          <Icon name="chevron-left" size={16} />
+          <span>
+            <span class="pager-label">Previous</span>
+            <span class="pager-title">{previous.title}</span>
+          </span>
+        </a>
+      ) : (
+        // Keeps `next` in the right-hand column on the first page of the site.
+        <span />
+      )}
+      {next && (
+        <a class="pager-link pager-next" href={withBase(`${next.slug}/`)} rel="next">
+          <span>
+            <span class="pager-label">Next</span>
+            <span class="pager-title">{next.title}</span>
+          </span>
+          <Icon name="chevron-right" size={16} />
+        </a>
+      )}
+    </nav>
+  )
+}

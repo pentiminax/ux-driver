@@ -1,9 +1,10 @@
 ---
 interface Props {
-  tone?: 'guide' | 'spotlight' | 'symfony'
+  /** Where the option comes from: the UX Driver bundle, Driver.js, or Symfony. */
+  tone?: 'bundle' | 'driver' | 'symfony' | 'neutral'
 }
 
-const { tone = 'guide' } = Astro.props
+const { tone = 'neutral' } = Astro.props
 ---
 
-<span class={`badge badge-${tone}`}><slot /></span>
+<span class:list={['badge', `badge-${tone}`]}><slot /></span>
