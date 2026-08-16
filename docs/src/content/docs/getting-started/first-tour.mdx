@@ -15,7 +15,7 @@ when the Tour reaches it. Here is a three-Step Tour over an orders screen, writt
 <TabItem label="Twig Components">
 ```twig
 <twig:Driver:Tour id="orders-tour" :once="true">
-    <button type="button" data-action="pentiminax--ux-driver--tour#start">
+    <button type="button" {{ ux_tour_action('start') }}>
         Start tour
     </button>
 
@@ -44,7 +44,7 @@ Each `<twig:Driver:Step>` wraps the element it describes, so the Tour reads top 
     .addStep('.export', 'Done', 'Export the filtered result', 'left')
     .once() %}
 
-<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+<button type="button" {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>
     Start tour
 </button>
 ```
@@ -58,10 +58,10 @@ Both modes serialize the same Driver.js configuration for the same Stimulus cont
 
 ## Starting the Tour
 
-Tours wait for an explicit trigger. Either put the Stimulus action on a control inside the Tour, as above:
+Tours wait for an explicit trigger. Either put `ux_tour_action('start')` on a control inside the Tour, as above:
 
 ```twig
-<button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+<button {{ ux_tour_action('start') }}>Start tour</button>
 ```
 
 …or set `:autostart="true"` and let the Tour run when the controller connects.

@@ -6,8 +6,9 @@ order: 6
 
 import Aside from '../../../components/Aside.astro'
 
-Tours and Hints each have their own Stimulus controller, and both are driven entirely from
-`data-action` attributes. Nothing here requires application JavaScript.
+Tours and Hints each have their own Stimulus controller. Templates print the trigger with
+`ux_tour_action()` and `ux_hints_action()`; the same attributes can be written by hand. Nothing here
+requires application JavaScript.
 
 ## Autostart
 
@@ -59,14 +60,13 @@ second trigger always yields a clean Tour from Step one — unless `moveTo` send
 ## Tour actions
 
 ```twig
-<button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
-<button data-action="pentiminax--ux-driver--tour#next">Next</button>
-<button data-action="pentiminax--ux-driver--tour#previous">Previous</button>
-<button data-action="pentiminax--ux-driver--tour#refresh">Refresh position</button>
-<button data-action="pentiminax--ux-driver--tour#destroy">Close tour</button>
+<button {{ ux_tour_action('start') }}>Start tour</button>
+<button {{ ux_tour_action('next') }}>Next</button>
+<button {{ ux_tour_action('previous') }}>Previous</button>
+<button {{ ux_tour_action('refresh') }}>Refresh position</button>
+<button {{ ux_tour_action('destroy') }}>Close tour</button>
 
-<button data-action="pentiminax--ux-driver--tour#moveTo"
-        data-pentiminax--ux-driver--tour-index-param="2">Go to step 3</button>
+<button {{ ux_tour_action('moveTo', {index: 2}) }}>Go to step 3</button>
 ```
 
 `moveTo` requires the `index` param and counts from zero. Omitting it does nothing.
@@ -74,10 +74,10 @@ second trigger always yields a clean Tour from Step one — unless `moveTo` send
 ## Hints actions
 
 ```twig
-<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
-<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
-<button data-action="pentiminax--ux-driver--hints#close">Close the open popover</button>
-<button data-action="pentiminax--ux-driver--hints#restoreAll">Restore dismissed hints</button>
+<button {{ ux_hints_action('show') }}>Show hints</button>
+<button {{ ux_hints_action('hide') }}>Hide hints</button>
+<button {{ ux_hints_action('close') }}>Close the open popover</button>
+<button {{ ux_hints_action('restoreAll') }}>Restore dismissed hints</button>
 ```
 
 Four more actions take a `hintId` param. All eight, with their parameters, are in the

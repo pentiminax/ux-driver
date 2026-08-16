@@ -52,7 +52,7 @@ Put a Tour next to the markup it explains.
 
 ```twig
 <twig:Driver:Tour id="welcome">
-    <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+    <button {{ ux_tour_action('start') }}>Start tour</button>
 
     <twig:Driver:Step :order="1" title="Dashboard" description="This is your daily overview">
         <h1>Dashboard</h1>

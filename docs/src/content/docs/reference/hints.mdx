@@ -59,9 +59,10 @@ anything targets it by action — the index fallback shifts whenever the group c
 | `restoreAll` | Brings every dismissed beacon back | none |
 | `refresh` | Recomputes beacon positions | none |
 
+`ux_hints_action()` prints the matching `data-action` (and `hintId` param when needed):
+
 ```twig
-<button data-action="pentiminax--ux-driver--hints#restore"
-        data-pentiminax--ux-driver--hints-hint-id-param="export">
+<button {{ ux_hints_action('restore', {hintId: 'export'}) }}>
     Restore export hint
 </button>
 ```

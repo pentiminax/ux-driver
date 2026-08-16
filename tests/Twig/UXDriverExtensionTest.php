@@ -80,6 +80,58 @@ final class UXDriverExtensionTest extends TestCase
         $this->assertSame('help', $hints->id);
     }
 
+    #[Test]
+    public function it_renders_a_tour_start_action(): void
+    {
+        $markup = (string) $this->extension()->renderTourAction('start');
+
+        $this->assertSame('data-action="pentiminax--ux-driver--tour#start"', $markup);
+    }
+
+    #[Test]
+    public function it_renders_a_tour_action_with_params(): void
+    {
+        $markup = (string) $this->extension()->renderTourAction('moveTo', ['index' => 2]);
+
+        $this->assertStringContainsString('data-action="pentiminax--ux-driver--tour#moveTo"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--tour-index-param="2"', $markup);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_tour_action(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown tour action "pause"');
+
+        $this->extension()->renderTourAction('pause');
+    }
+
+    #[Test]
+    public function it_renders_a_hints_action(): void
+    {
+        $markup = (string) $this->extension()->renderHintsAction('show');
+
+        $this->assertSame('data-action="pentiminax--ux-driver--hints#show"', $markup);
+    }
+
+    #[Test]
+    public function it_renders_a_hints_action_with_params(): void
+    {
+        $markup = (string) $this->extension()->renderHintsAction('open', ['hintId' => 'export']);
+
+        $this->assertStringContainsString('data-action="pentiminax--ux-driver--hints#open"', $markup);
+        $this->assertStringContainsString('data-pentiminax--ux-driver--hints-hint-id-param="export"', $markup);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_hints_action(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown hints action "pause"');
+
+        $this->extension()->renderHintsAction('pause');
+    }
+
     private function extension(): UXDriverExtension
     {
         return new UXDriverExtension(

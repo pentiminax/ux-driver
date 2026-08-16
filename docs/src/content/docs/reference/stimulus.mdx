@@ -9,6 +9,9 @@ import Aside from '../../../components/Aside.astro'
 Two controllers ship with the bundle, and every event they emit is prefixed `ux-driver:`. Events are
 dispatched on the controller element and bubble, so `document.addEventListener` reaches all of them.
 
+Templates print the same action attributes with `ux_tour_action()` and `ux_hints_action()`. The tables
+below are the Stimulus contract those helpers emit.
+
 ## Controllers
 
 | Identifier | Drives |

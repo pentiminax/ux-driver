@@ -22,7 +22,7 @@ or the timeout expires:
         waitForElement: 2000,
     }) %}
 
-<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+<button type="button" {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>
     Start tour
 </button>
 ```
@@ -47,7 +47,7 @@ Steps that only exist for some roles:
         skipMissingElement: true,
     }) %}
 
-<button type="button" {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">
+<button type="button" {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>
     Start tour
 </button>
 ```
@@ -67,8 +67,8 @@ animation, a lazily loaded image. `refresh` recomputes the overlay and popover p
 current DOM:
 
 ```twig
-<button data-action="pentiminax--ux-driver--tour#refresh">Refresh tour</button>
-<button data-action="pentiminax--ux-driver--hints#refresh">Refresh hints</button>
+<button {{ ux_tour_action('refresh') }}>Refresh tour</button>
+<button {{ ux_hints_action('refresh') }}>Refresh hints</button>
 ```
 
 ## Hints

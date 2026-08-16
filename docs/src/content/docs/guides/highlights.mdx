@@ -18,7 +18,7 @@ The Twig function prints controller attributes on the element you put it on:
 ```twig
 <button type="button"
         {{ ux_highlight('#invoice-export', 'Export', 'CSV and PDF are both available here') }}
-        data-action="pentiminax--ux-driver--tour#highlight">
+        {{ ux_tour_action('highlight') }}>
     Where is export?
 </button>
 ```

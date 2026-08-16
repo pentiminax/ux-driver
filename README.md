@@ -35,7 +35,7 @@ import 'driver.js/dist/hints.css'
 
 ```twig
 <twig:Driver:Tour id="welcome">
-    <button type="button" data-action="pentiminax--ux-driver--tour#start">
+    <button type="button" {{ ux_tour_action('start') }}>
         Start tour
     </button>
 

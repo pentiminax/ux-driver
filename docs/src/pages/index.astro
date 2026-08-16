@@ -125,7 +125,7 @@ const modes = [
         </p>
       </div>
       <pre><code>{`<twig:Driver:Tour id="admin-orders">
-  <button data-action="pentiminax--ux-driver--tour#start">
+  <button {{ ux_tour_action('start') }}>
     Start tour
   </button>
 

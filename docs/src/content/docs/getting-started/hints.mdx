@@ -45,15 +45,15 @@ argument to `ux_hints(hints, false)` — when the beacons should only appear aft
 
 ## Showing and hiding
 
-The Hints group is driven by the `pentiminax--ux-driver--hints` controller:
+The Hints group is driven by the `pentiminax--ux-driver--hints` controller. `ux_hints_action()` prints the
+trigger:
 
 ```twig
-<button data-action="pentiminax--ux-driver--hints#show">Show hints</button>
-<button data-action="pentiminax--ux-driver--hints#hide">Hide hints</button>
-<button data-action="pentiminax--ux-driver--hints#close">Close the open popover</button>
+<button {{ ux_hints_action('show') }}>Show hints</button>
+<button {{ ux_hints_action('hide') }}>Hide hints</button>
+<button {{ ux_hints_action('close') }}>Close the open popover</button>
 
-<button data-action="pentiminax--ux-driver--hints#open"
-        data-pentiminax--ux-driver--hints-hint-id-param="filters">Open the filters hint</button>
+<button {{ ux_hints_action('open', {hintId: 'filters'}) }}>Open the filters hint</button>
 ```
 
 `hide` removes every beacon; `close` only closes the popover that is open. To retire a single beacon, or

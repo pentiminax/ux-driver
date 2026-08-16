@@ -17,7 +17,7 @@ Components put the help inside the template, wrapped around the element it descr
 
 ```twig
 <twig:Driver:Tour id="profile-tour">
-    <button data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+    <button {{ ux_tour_action('start') }}>Start tour</button>
 
     <twig:Driver:Step :order="1" title="Profile" description="Keep your public details current">
         <section class="profile-card">...</section>
@@ -39,11 +39,11 @@ Builders compose the same objects away from the markup, addressing elements by s
     .addStep('.profile-card', 'Profile', 'Keep your public details current')
     .addStep('.security-card', 'Security', 'Review login settings', 'top') %}
 
-<button {{ ux_tour(tour) }} data-action="pentiminax--ux-driver--tour#start">Start tour</button>
+<button {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>Start tour</button>
 ```
 
 `create_tour()` and `create_hints()` are Twig functions registered by the bundle; `ux_tour()` and
-`ux_hints()` print the controller attributes.
+`ux_hints()` print the controller attributes, `ux_tour_action()` and `ux_hints_action()` the trigger.
 </TabItem>
 
 <TabItem label="PHP">
@@ -65,14 +65,15 @@ public function profile(): Response
 ```
 
 `TourBuilder` and `HintsBuilder` are autowired services — type-hint them in a controller or a service and
-Symfony injects them. The template then prints `{{ ux_tour(tour) }}` on the trigger element.
+Symfony injects them. The template then prints `{{ ux_tour(tour) }}` and `{{ ux_tour_action('start') }}` on
+the trigger element.
 </TabItem>
 </Tabs>
 
 <Aside type="warning" title="`ux_tour()` never autostarts">
-`ux_tour(tour)` always renders `autostart=false`, whatever the Tour object says, so a builder Tour needs a
-`pentiminax--ux-driver--tour#start` action somewhere. `ux_hints(hints)` is the mirror image: it autostarts
-unless you pass `false` as the second argument.
+`ux_tour(tour)` always renders `autostart=false`, whatever the Tour object says, so a builder Tour needs
+`{{ ux_tour_action('start') }}` somewhere. `ux_hints(hints)` is the mirror image: it autostarts unless you
+pass `false` as the second argument.
 </Aside>
 
 ## Choosing
