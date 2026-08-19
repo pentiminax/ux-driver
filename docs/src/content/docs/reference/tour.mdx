@@ -99,3 +99,13 @@ click hooks. See [Events](/guides/events/).
 | `ux_driver_html(html)` | A string marked as trusted markup |
 
 `ux_highlight()` has its own page: [Highlights](/guides/highlights/).
+
+## PHP services
+
+| Service | Returns |
+| --- | --- |
+| `Pentiminax\UX\Driver\Builder\TourBuilder::create(id)` | A new `Tour`, for chaining in PHP |
+| `Pentiminax\UX\Driver\Builder\HintsBuilder::create(id)` | A new `Hints` |
+
+Both are autowired, so a controller or a service only has to type-hint them. `create_tour()` and
+`create_hints()` are thin Twig wrappers over exactly these two calls.

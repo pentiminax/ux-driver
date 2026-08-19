@@ -9,7 +9,7 @@ export const sections = [
   {
     id: 'getting-started',
     title: 'Start here',
-    description: 'Install UX Driver and ship a first Tour and a first Hint.',
+    description: 'Install UX Driver and ship a first Tour and a first Hint, in Twig or in PHP.',
   },
   {
     id: 'guides',

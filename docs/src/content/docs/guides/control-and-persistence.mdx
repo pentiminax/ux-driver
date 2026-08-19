@@ -5,6 +5,8 @@ order: 6
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 Tours and Hints each have their own Stimulus controller. Templates print the trigger with
 `ux_tour_action()` and `ux_hints_action()`; the same attributes can be written by hand. Nothing here
@@ -15,6 +17,8 @@ requires application JavaScript.
 Tours default to `autostart=false`; Hints default to `autostart=true`. The asymmetry is deliberate: a Tour
 takes the screen away from someone, a beacon does not.
 
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Tour id="welcome" :autostart="true">
     ...
@@ -24,15 +28,63 @@ takes the screen away from someone, a beacon does not.
     ...
 </twig:Driver:Hints>
 ```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('welcome') %}
+{% set hints = create_hints('help') %}
+
+{# A builder Tour always waits: give it a trigger. #}
+<button {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>Start tour</button>
+
+{# Hints autostart unless the second argument says otherwise. #}
+<div {{ ux_hints(hints, false) }}></div>
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour = $this->tourBuilder->create('welcome');
+$hints = $this->hintsBuilder->create('help');
+```
+
+`autostart` is the one setting with no builder method — it is decided when the template prints the
+attributes, with `ux_tour_action('start')` for a Tour and `ux_hints(hints, false)` for a Hints group.
+</TabItem>
+</Tabs>
 
 Builders keep the same defaults: `ux_tour(tour)` renders a Tour that waits, and `ux_hints(hints)`
 autostarts unless you pass `false` as the second argument.
 
 ## `once`
 
-`once` is a UX Driver option, not a Driver.js one. With `:once="true"`, the controller writes
-`ux-driver:seen:<id>` to `window.localStorage` and refuses to start that Tour again — autostart and manual
-triggers both return early.
+`once` is a UX Driver option, not a Driver.js one. With `:once="true"` on the component, `.once()` on the
+Twig builder, or `->once()` on the PHP builder, the controller writes `ux-driver:seen:<id>` to
+`window.localStorage` and refuses to start that Tour again — autostart and manual triggers both return
+early.
+
+<Tabs>
+<TabItem label="Component">
+```twig
+<twig:Driver:Tour id="welcome" :once="true">
+    ...
+</twig:Driver:Tour>
+```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('welcome').once() %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour = $this->tourBuilder->create('welcome')->once();
+```
+</TabItem>
+</Tabs>
 
 The flag is written at exactly one moment: when someone clicks the done button on the last Step. That
 narrow rule has consequences worth knowing:

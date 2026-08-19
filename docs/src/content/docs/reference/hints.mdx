@@ -6,9 +6,71 @@ order: 13
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 Hints use the separate `driver.js/hints` entrypoint and the `pentiminax--ux-driver--hints` controller.
-For the introduction, see [Hints](/getting-started/hints/).
+For the introduction, see [Hints](/getting-started/hints/). Every option below can be set in all three
+authoring forms.
+
+## Create
+
+<Tabs>
+<TabItem label="Component">
+```twig
+<twig:Driver:Hints id="orders-help">
+    ...
+</twig:Driver:Hints>
+```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set hints = create_hints('orders-help') %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$hints = $hintsBuilder->create('orders-help');
+```
+</TabItem>
+</Tabs>
+
+`HintsBuilder` is an autowired service — type-hint it in a controller and Symfony injects it. The `id` is
+required and is what `ux_hints_action()` targets.
+
+## Add a Hint
+
+<Tabs>
+<TabItem label="Component">
+```twig
+<twig:Driver:Hint hintId="filters" title="Filters" description="Narrow the list first">
+    <button type="button">Filters</button>
+</twig:Driver:Hint>
+```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set hints = hints.addHint('.filters', 'filters', 'Filters', 'Narrow the list first') %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$hints->addHint(
+    element: '.filters',
+    id: 'filters',
+    title: 'Filters',
+    description: 'Narrow the list first',
+    side: 'bottom',
+    align: 'start',
+    options: [],
+);
+```
+</TabItem>
+</Tabs>
 
 ## Group options
 

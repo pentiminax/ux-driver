@@ -1,6 +1,6 @@
 ---
 title: Authoring modes
-description: Choose between declarative Twig Components and builder-based Tours or Hints.
+description: Choose between declarative Twig Components, the Twig builder, and the PHP builder.
 order: 4
 ---
 
@@ -8,13 +8,15 @@ import Aside from '../../../components/Aside.astro'
 import Tabs from '../../../components/Tabs.astro'
 import TabItem from '../../../components/TabItem.astro'
 
-There are two ways to declare a Tour or a Hints group, and they produce the same serialized configuration
-for the same Stimulus controller. The choice is about where the help is easiest to read and maintain.
+There are three ways to declare a Tour or a Hints group, and they produce the same serialized configuration
+for the same Stimulus controller: the `<twig:Driver:Tour>` component, the `create_tour()` Twig builder, and
+the autowired `TourBuilder` service in PHP. The choice is about where the help is easiest to read and
+maintain.
 
-## Twig Components
+## The same Tour, three ways
 
-Components put the help inside the template, wrapped around the element it describes:
-
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Tour id="profile-tour">
     <button {{ ux_tour_action('start') }}>Start tour</button>
@@ -22,18 +24,19 @@ Components put the help inside the template, wrapped around the element it descr
     <twig:Driver:Step :order="1" title="Profile" description="Keep your public details current">
         <section class="profile-card">...</section>
     </twig:Driver:Step>
+
+    <twig:Driver:Step :order="2" title="Security" description="Review login settings" side="top">
+        <section class="security-card">...</section>
+    </twig:Driver:Step>
 </twig:Driver:Tour>
 ```
 
+Components put the help inside the template, wrapped around the element it describes.
 `<twig:Driver:Step>` and `<twig:Driver:Hint>` render ordinary elements carrying `data-*` attributes. The
 controller reads those attributes only when no builder Steps or Hints were passed — builder input wins.
+</TabItem>
 
-## Builders
-
-Builders compose the same objects away from the markup, addressing elements by selector:
-
-<Tabs>
-<TabItem label="Twig">
+<TabItem label="Twig builder">
 ```twig
 {% set tour = create_tour('profile-tour')
     .addStep('.profile-card', 'Profile', 'Keep your public details current')
@@ -43,10 +46,11 @@ Builders compose the same objects away from the markup, addressing elements by s
 ```
 
 `create_tour()` and `create_hints()` are Twig functions registered by the bundle; `ux_tour()` and
-`ux_hints()` print the controller attributes, `ux_tour_action()` and `ux_hints_action()` the trigger.
+`ux_hints()` print the controller attributes, `ux_tour_action()` and `ux_hints_action()` the trigger. The
+builder addresses elements by selector, so the Steps do not have to sit inside the markup they explain.
 </TabItem>
 
-<TabItem label="PHP">
+<TabItem label="PHP builder">
 ```php
 use Pentiminax\UX\Driver\Builder\TourBuilder;
 
@@ -67,6 +71,10 @@ public function profile(): Response
 `TourBuilder` and `HintsBuilder` are autowired services — type-hint them in a controller or a service and
 Symfony injects them. The template then prints `{{ ux_tour(tour) }}` and `{{ ux_tour_action('start') }}` on
 the trigger element.
+
+Because a `Tour` is a plain PHP object, this is the mode for Steps that depend on the current user, a
+feature flag, a repository query, or translations resolved in a service — and the only mode you can unit
+test without rendering a template.
 </TabItem>
 </Tabs>
 
@@ -79,9 +87,11 @@ pass `false` as the second argument.
 ## Choosing
 
 Reach for **components** when the target markup lives in the same template and you want the next developer
-to see the help while editing the page. Reach for **builders** when the Steps are data-driven, conditional,
-or assembled in a controller or macro, and the selectors are stable.
+to see the help while editing the page. Reach for the **Twig builder** when the Steps are assembled from
+template data or a macro. Reach for the **PHP builder** when the Steps are data-driven, conditional, or
+belong to a controller or a dedicated service, and the selectors are stable.
 
-Both paths run through the same `Tour`, `Step`, `Hints`, and `Hint` model classes, so validation and
-escaping behave identically. See [Security](/guides/security/) for what gets escaped, and
-[Dynamic targets](/guides/dynamic-targets/) for the one capability only builder Steps have.
+All three paths run through the same `Tour`, `Step`, `Hints`, and `Hint` model classes, so validation and
+escaping behave identically — the Twig builder is literally the PHP builder exposed as a Twig function. See
+[Security](/guides/security/) for what gets escaped, and [Dynamic targets](/guides/dynamic-targets/) for the
+one capability only builder Steps have.

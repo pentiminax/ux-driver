@@ -5,16 +5,35 @@ order: 5
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 A Highlight is a Tour of one Step. There is no next button, no progress counter, and nothing to
 complete — the overlay dims the page, one element stays lit, and a single popover explains it. Reach for
 it when you have one thing to announce: a new control, a field that just changed meaning, a validation
 error worth pointing at.
 
-## `ux_highlight()`
+## Declaring one
 
-The Twig function prints controller attributes on the element you put it on:
+The `highlight` controller action highlights the first Step of whatever Tour it finds, so all three
+authoring modes can drive it. `ux_highlight()` is the shorthand for the common case.
 
+<Tabs>
+<TabItem label="Component">
+```twig
+<twig:Driver:Tour id="export-highlight">
+    <button type="button" {{ ux_tour_action('highlight') }}>Where is export?</button>
+
+    <twig:Driver:Step :order="1" title="Export" description="CSV and PDF are both available here">
+        <button type="button" id="invoice-export">Export</button>
+    </twig:Driver:Step>
+</twig:Driver:Tour>
+```
+
+A one-Step Tour driven by `highlight` instead of `start`: no progress counter, no next button.
+</TabItem>
+
+<TabItem label="Twig builder">
 ```twig
 <button type="button"
         {{ ux_highlight('#invoice-export', 'Export', 'CSV and PDF are both available here') }}
@@ -26,8 +45,29 @@ The Twig function prints controller attributes on the element you put it on:
 The first argument is the selector of the element to highlight — not the element carrying the attributes.
 `ux_highlight()` builds a one-Step Tour behind the scenes and hands it to the same
 `pentiminax--ux-driver--tour` controller a full Tour uses.
+</TabItem>
 
-## Signature
+<TabItem label="PHP builder">
+```php
+$highlight = $this->tourBuilder->create('export-highlight')
+    ->addStep('#invoice-export', 'Export', 'CSV and PDF are both available here');
+
+return $this->render('invoice/index.html.twig', ['highlight' => $highlight]);
+```
+
+```twig
+<button type="button" {{ ux_tour(highlight) }} {{ ux_tour_action('highlight') }}>
+    Where is export?
+</button>
+```
+
+There is no `ux_highlight()` equivalent on the PHP side because none is needed: a Tour with one Step and the
+`highlight` action is exactly what the Twig function produces. Build it in PHP when the title or the
+selector depends on data.
+</TabItem>
+</Tabs>
+
+## `ux_highlight()` signature
 
 ```php
 ux_highlight(

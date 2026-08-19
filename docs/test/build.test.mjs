@@ -112,7 +112,11 @@ test('the home page states what the bundle is', async () => {
   const index = await readDistFile('index.html')
 
   assert.match(index, /UX Driver/)
-  assert.match(index, /<h1>Product tours that live in your Twig templates\./)
+  assert.match(index, /<h1>Product tours you write in Twig — or in PHP\./)
+  // Both authoring modes are shown on the home page; neither is the hidden one.
+  assert.match(index, /Twig Components<\/figcaption>/)
+  assert.match(index, /PHP builder<\/figcaption>/)
+  assert.match(index, /tourBuilder-&gt;create|tourBuilder->create/)
   assert.match(index, /Start tour/)
   assert.match(index, /Show hints/)
   assert.match(index, /<noscript>[\s\S]*interactive demo needs JavaScript/)

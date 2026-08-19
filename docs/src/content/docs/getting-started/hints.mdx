@@ -1,6 +1,6 @@
 ---
 title: Hints
-description: Add contextual beacons with Twig Components or the hints builder.
+description: Add contextual beacons with Twig Components, the Twig builder, or the PHP builder.
 order: 3
 ---
 
@@ -12,7 +12,7 @@ A Tour interrupts; a Hint waits. Hints put a small beacon next to a control and 
 someone asks for it — the right shape for help that should outlive onboarding.
 
 <Tabs>
-<TabItem label="Twig Components">
+<TabItem label="Component">
 ```twig
 <twig:Driver:Hints id="orders-help" buttonText="Done" :overlay="true">
     <twig:Driver:Hint hintId="filters" title="Filters" description="Save time by narrowing the order list first">
@@ -26,13 +26,39 @@ someone asks for it — the right shape for help that should outlive onboarding.
 ```
 </TabItem>
 
-<TabItem label="Builder">
+<TabItem label="Twig builder">
 ```twig
 {% set hints = create_hints('orders-help')
     .addHint('.filters', 'filters', 'Filters', 'Save time by narrowing the list first')
     .addHint('.export', 'export', 'Export', 'Download the current view as a CSV', 'left')
     .buttonText('Done') %}
 
+<div {{ ux_hints(hints) }}></div>
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+use Pentiminax\UX\Driver\Builder\HintsBuilder;
+
+public function __construct(private readonly HintsBuilder $hintsBuilder)
+{
+}
+
+public function index(): Response
+{
+    $hints = $this->hintsBuilder->create('orders-help')
+        ->addHint('.filters', 'filters', 'Filters', 'Save time by narrowing the list first')
+        ->addHint('.export', 'export', 'Export', 'Download the current view as a CSV', side: 'left')
+        ->buttonText('Done');
+
+    return $this->render('order/index.html.twig', ['hints' => $hints]);
+}
+```
+
+`HintsBuilder` is autowired like `TourBuilder`. The template only prints the controller attributes:
+
+```twig
 <div {{ ux_hints(hints) }}></div>
 ```
 </TabItem>

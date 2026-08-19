@@ -10,8 +10,9 @@ import Tabs from '../../../components/Tabs.astro'
 import TabItem from '../../../components/TabItem.astro'
 
 UX Driver is a Symfony bundle that renders [Driver.js](https://driverjs.com) Tours, Highlights, and Hints
-from Twig. It ships Twig Components, Twig functions, and two Stimulus controllers, so nothing about a Tour
-has to be written in application JavaScript.
+from Twig Components or from PHP builders. It ships Twig Components, Twig functions, autowired builder
+services, and two Stimulus controllers, so nothing about a Tour has to be written in application
+JavaScript.
 
 It needs PHP 8.2+, Symfony 7 or 8, and Driver.js 1.8+. The full matrix lives in
 [Compatibility](/reference/compatibility/).
@@ -48,8 +49,10 @@ import 'driver.js/dist/hints.css'
 </li>
 
 <li>
-Put a Tour next to the markup it explains.
+Declare a Tour — either as a component next to the markup it explains, or with a builder.
 
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Tour id="welcome">
     <button {{ ux_tour_action('start') }}>Start tour</button>
@@ -59,11 +62,48 @@ Put a Tour next to the markup it explains.
     </twig:Driver:Step>
 </twig:Driver:Tour>
 ```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('welcome')
+    .addStep('.dashboard-title', 'Dashboard', 'This is your daily overview') %}
+
+<button {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>Start tour</button>
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+use Pentiminax\UX\Driver\Builder\TourBuilder;
+
+public function __construct(private readonly TourBuilder $tourBuilder)
+{
+}
+
+public function dashboard(): Response
+{
+    $tour = $this->tourBuilder->create('welcome')
+        ->addStep('.dashboard-title', 'Dashboard', 'This is your daily overview');
+
+    return $this->render('dashboard.html.twig', ['tour' => $tour]);
+}
+```
+
+Then print the controller attributes in the template:
+
+```twig
+<button {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>Start tour</button>
+```
+</TabItem>
+</Tabs>
 </li>
 </Steps>
 
 The `<twig:Driver:Tour>` component renders the `pentiminax--ux-driver--tour` controller values, and each
-`<twig:Driver:Step>` renders its host element with the target attributes the controller reads on start.
+`<twig:Driver:Step>` renders its host element with the target attributes the controller reads on start. The
+builders produce the same values from a `Tour` object — `TourBuilder` and `HintsBuilder` are autowired
+services, so a controller only has to type-hint them.
 
 <Aside type="note" title="Tours wait to be asked">
 A Tour does not start on its own: `autostart` defaults to `false`, so without the button above nothing
@@ -74,4 +114,4 @@ happens. Hints are the opposite — see [Control and persistence](/guides/contro
 
 - [First Tour](/getting-started/first-tour/) — a complete three-Step Tour, and the same Tour written with the builder.
 - [Hints](/getting-started/hints/) — beacons that stay on the page after onboarding.
-- [Authoring modes](/guides/authoring-modes/) — when to reach for components and when for builders.
+- [Authoring modes](/guides/authoring-modes/) — when to reach for components, and when for the Twig or PHP builders.

@@ -1,6 +1,6 @@
 ---
 title: First Tour
-description: Build a Twig-first product tour and start it from a button.
+description: Build a product tour with Twig Components or the PHP builder, and start it from a button.
 order: 2
 ---
 
@@ -9,10 +9,11 @@ import Tabs from '../../../components/Tabs.astro'
 import TabItem from '../../../components/TabItem.astro'
 
 A Tour is an ordered list of Steps. Each Step points at one element and carries the popover text shown
-when the Tour reaches it. Here is a three-Step Tour over an orders screen, written both ways.
+when the Tour reaches it. Here is the same three-Step Tour over an orders screen, written in each of the
+three authoring forms — a Twig Component tree, the Twig builder, and the PHP builder in a controller.
 
 <Tabs>
-<TabItem label="Twig Components">
+<TabItem label="Component">
 ```twig
 <twig:Driver:Tour id="orders-tour" :once="true">
     <button type="button" {{ ux_tour_action('start') }}>
@@ -36,7 +37,7 @@ when the Tour reaches it. Here is a three-Step Tour over an orders screen, writt
 Each `<twig:Driver:Step>` wraps the element it describes, so the Tour reads top to bottom like the page does.
 </TabItem>
 
-<TabItem label="Builder">
+<TabItem label="Twig builder">
 ```twig
 {% set tour = create_tour('orders-tour')
     .addStep('.orders-title', 'Orders', 'Review current customer orders')
@@ -50,6 +51,48 @@ Each `<twig:Driver:Step>` wraps the element it describes, so the Tour reads top 
 ```
 
 The builder addresses elements by selector, so the Steps do not have to sit inside the markup they explain.
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+namespace App\Controller;
+
+use Pentiminax\UX\Driver\Builder\TourBuilder;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+class OrderController extends AbstractController
+{
+    public function __construct(private readonly TourBuilder $tourBuilder)
+    {
+    }
+
+    #[Route('/orders', name: 'orders')]
+    public function index(): Response
+    {
+        $tour = $this->tourBuilder->create('orders-tour')
+            ->addStep('.orders-title', 'Orders', 'Review current customer orders')
+            ->addStep('.filters', 'Filters', 'Narrow the list before export')
+            ->addStep('.export', 'Done', 'Export the filtered result', side: 'left')
+            ->once();
+
+        return $this->render('order/index.html.twig', ['tour' => $tour]);
+    }
+}
+```
+
+`TourBuilder` is an autowired service, so the constructor above is all the wiring there is. The template
+prints the same two attributes as the Twig builder:
+
+```twig
+<button type="button" {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>
+    Start tour
+</button>
+```
+
+Build the Tour in PHP when the Steps depend on the user, the data, or a feature flag — the whole
+`Tour` object is ordinary PHP, so it can be assembled in a service and unit-tested.
 </TabItem>
 </Tabs>
 

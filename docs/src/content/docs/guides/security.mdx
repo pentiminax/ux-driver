@@ -5,6 +5,8 @@ order: 10
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 Driver.js writes popover content and button labels with `innerHTML`. Left alone, that makes every title and
 description an HTML injection sink. UX Driver escapes plain strings before serializing them, so the default
@@ -23,22 +25,61 @@ path is safe even when the text comes from the database.
 The label options exist at both levels — a Tour sets them for the whole walkthrough, a Step overrides them
 for itself — and both are escaped identically.
 
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Step title="<b>Billing</b>" description="<script>alert(1)</script>" />
 ```
+</TabItem>
 
-That popover shows the literal characters. No bold text, no script.
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('billing-tour')
+    .addStep('.billing', '<b>Billing</b>', '<script>alert(1)</script>') %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour = $this->tourBuilder->create('billing-tour')
+    ->addStep('.billing', '<b>Billing</b>', '<script>alert(1)</script>');
+```
+</TabItem>
+</Tabs>
+
+That popover shows the literal characters. No bold text, no script. Escaping happens in the model classes,
+so it is identical in all three modes.
 
 ## Trusted HTML
 
 When markup is the point — a `<strong>`, a `<code>`, a line break — `ux_driver_html()` marks a string as
 trusted and skips escaping:
 
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Step :title="ux_driver_html('<strong>Billing</strong>')" />
 ```
+</TabItem>
 
-In PHP, passing a `Twig\Markup` instance does the same thing.
+<TabItem label="Twig builder">
+```twig
+{% set tour = create_tour('billing-tour')
+    .addStep('.billing', ux_driver_html('<strong>Billing</strong>')) %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+use Twig\Markup;
+
+$tour = $this->tourBuilder->create('billing-tour')
+    ->addStep('.billing', new Markup('<strong>Billing</strong>', 'UTF-8'));
+```
+
+`ux_driver_html()` is only the Twig door to the same thing: any `Twig\Markup` instance skips escaping.
+</TabItem>
+</Tabs>
 
 <Aside type="danger" title="Never pass user input to `ux_driver_html()`">
 The function is not a sanitizer. It is an assertion that you already know the string is safe. A value that

@@ -11,7 +11,7 @@ const modes = [
   {
     name: 'Tour',
     href: withBase('getting-started/first-tour/'),
-    description: 'A numbered sequence of Steps. Driver.js handles the overlay, the focus ring, and the popover; you write Twig.',
+    description: 'A numbered sequence of Steps. Driver.js handles the overlay, the focus ring, and the popover; you declare the Steps in Twig or in PHP.',
   },
   {
     name: 'Highlight',
@@ -28,15 +28,16 @@ const modes = [
 
 <Layout
   title="UX Driver — Driver.js tours for Symfony"
-  description="A Symfony bundle that renders Driver.js product tours, highlights, and hints from Twig — no handwritten JavaScript."
+  description="A Symfony bundle that renders Driver.js product tours, highlights, and hints from Twig templates or PHP builders — no handwritten JavaScript."
   wide
 >
   <section class="hero">
     <div class="hero-copy">
-      <h1>Product tours that live in your Twig templates.</h1>
+      <h1>Product tours you write in Twig — or in PHP.</h1>
       <p class="hero-lede">
         UX Driver wires <a href="https://driverjs.com">Driver.js</a> into Symfony. Declare a Tour, a Highlight, or a set of
-        Hints next to the markup they point at — the bundle ships the Stimulus controller, the assets, and the events.
+        Hints as Twig Components next to the markup they point at, or compose them in a controller with the autowired PHP
+        builders — the bundle ships the Stimulus controller, the assets, and the events.
       </p>
 
       <div class="hero-actions">
@@ -111,20 +112,24 @@ const modes = [
     </div>
   </section>
 
-  <section class="home-section" aria-labelledby="twig-heading">
+  <section class="home-section" aria-labelledby="authoring-heading">
     <div class="twig-first">
       <div class="twig-first-copy">
-        <h2 id="twig-heading">The Tour is markup, not a script</h2>
+        <h2 id="authoring-heading">Three authoring modes, one controller</h2>
         <p>
-          Steps are declared where the elements are. The Stimulus controller reads them at connect time, so a Tour authored
-          in a Twig include or a Live Component keeps working when the DOM changes.
+          Wrap the Steps around the elements they describe with Twig Components, chain them in a template with
+          <code>create_tour()</code>, or build the same Tour in PHP and hand it to the template. All three serialize the same
+          Driver.js configuration for the same Stimulus controller.
         </p>
         <p>
-          Prefer to build Tours in PHP? The <a href={withBase('guides/authoring-modes/')}>authoring modes guide</a> covers
-          the builder API and when each mode fits.
+          Components keep the help visible while editing the page. The PHP builders &mdash; <code>TourBuilder</code> and <code>HintsBuilder</code>, autowired services &mdash; fit Steps that are data-driven, conditional, or translated in a
+          controller. The <a href={withBase('guides/authoring-modes/')}>authoring modes guide</a> covers when each fits.
         </p>
       </div>
-      <pre><code>{`<twig:Driver:Tour id="admin-orders">
+      <div class="authoring-samples">
+        <figure>
+          <figcaption>Twig Components</figcaption>
+          <pre><code>{`<twig:Driver:Tour id="admin-orders">
   <button {{ ux_tour_action('start') }}>
     Start tour
   </button>
@@ -133,6 +138,20 @@ const modes = [
     <h1>Orders</h1>
   </twig:Driver:Step>
 </twig:Driver:Tour>`}</code></pre>
+        </figure>
+
+        <figure>
+          <figcaption>PHP builder</figcaption>
+          <pre><code>{`$tour = $tourBuilder->create('admin-orders')
+    ->addStep('.orders-title', 'Orders')
+    ->addStep('.filters', 'Filters', 'Narrow the list')
+    ->once();
+
+return $this->render('orders.html.twig', [
+    'tour' => $tour,
+]);`}</code></pre>
+        </figure>
+      </div>
     </div>
   </section>
 

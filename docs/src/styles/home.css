@@ -267,6 +267,28 @@
     text-wrap: pretty;
   }
 
+  /* Both authoring modes shown side by side, so neither reads as the default. */
+  .authoring-samples figure {
+    margin: 0;
+  }
+
+  .authoring-samples figure + figure {
+    margin-top: var(--space-5);
+  }
+
+  .authoring-samples figcaption {
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .authoring-samples pre {
+    margin-block: var(--space-2) 0;
+  }
+
   /* ---- Section index cards -------------------------------------------- */
   .home-section-card {
     border-top: 2px solid var(--accent);

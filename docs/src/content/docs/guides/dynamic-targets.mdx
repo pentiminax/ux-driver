@@ -5,6 +5,8 @@ order: 9
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 A selector-based Step assumes its target is in the DOM when the Tour reaches it. Turbo Frames, modals, and
 lazily rendered panels break that assumption. Driver.js 1.8 gives two Step options for it, and UX Driver
@@ -15,6 +17,8 @@ passes both through.
 `waitForElement` takes a timeout in milliseconds. The Tour pauses on that Step until the selector matches
 or the timeout expires:
 
+<Tabs>
+<TabItem label="Twig builder">
 ```twig
 {% set tour = create_tour('invoice-tour')
     .addStep('#open-invoice', 'Invoices', 'Open one to see the preview')
@@ -26,20 +30,26 @@ or the timeout expires:
     Start tour
 </button>
 ```
+</TabItem>
 
-The same option in PHP:
-
+<TabItem label="PHP builder">
 ```php
-$tour->addStep('#invoice-preview', 'Preview', 'This renders after the modal opens', options: [
-    'waitForElement' => 2000,
-]);
+$tour = $this->tourBuilder->create('invoice-tour')
+    ->addStep('#open-invoice', 'Invoices', 'Open one to see the preview')
+    ->addStep('#invoice-preview', 'Preview', 'This renders after the modal opens', options: [
+        'waitForElement' => 2000,
+    ]);
 ```
+</TabItem>
+</Tabs>
 
 ## Skip a missing target
 
 `skipMissingElement` lets the Tour move on rather than stall when a selector never matches — the shape for
 Steps that only exist for some roles:
 
+<Tabs>
+<TabItem label="Twig builder">
 ```twig
 {% set tour = create_tour('admin-tour')
     .addStep('.orders', 'Orders', 'Every account sees this')
@@ -51,13 +61,28 @@ Steps that only exist for some roles:
     Start tour
 </button>
 ```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour = $this->tourBuilder->create('admin-tour')
+    ->addStep('.orders', 'Orders', 'Every account sees this')
+    ->addStep('.export', 'Export', 'Only admins see this control', options: [
+        'skipMissingElement' => true,
+    ]);
+```
+
+In PHP the alternative is to not add the Step at all — `if ($this->isGranted('ROLE_ADMIN'))` around the
+`addStep()` call is often clearer than shipping a Step the Tour then has to skip.
+</TabItem>
+</Tabs>
 
 Without it, a missing target leaves the Tour waiting on that Step with nothing to highlight.
 
 <Aside type="note" title="Both options are builder-only">
-`<twig:Driver:Step>` wraps the element it describes, so its target has already rendered by definition —
-there is nothing to wait for. Async targets need selector-based Steps from a builder. See
-[Authoring modes](/guides/authoring-modes/).
+There is no `Component` tab here: `<twig:Driver:Step>` wraps the element it describes, so its target has
+already rendered by definition — there is nothing to wait for. Async targets need selector-based Steps from
+the Twig or the PHP builder. See [Authoring modes](/guides/authoring-modes/).
 </Aside>
 
 ## Refresh after a layout shift

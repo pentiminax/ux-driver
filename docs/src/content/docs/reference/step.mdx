@@ -5,12 +5,30 @@ order: 12
 ---
 
 import Aside from '../../../components/Aside.astro'
+import Tabs from '../../../components/Tabs.astro'
+import TabItem from '../../../components/TabItem.astro'
 
 A Step targets one element, or nothing at all. Every option here overrides the Tour-level value for that
 Step only.
 
-## Builder arguments
+## Create
 
+<Tabs>
+<TabItem label="Component">
+```twig
+<twig:Driver:Step :order="1" title="Title" description="Description" side="bottom" align="start">
+    <div class="selector">...</div>
+</twig:Driver:Step>
+```
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = tour.addStep('.selector', 'Title', 'Description', 'bottom', 'start', {}) %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
 ```php
 $tour->addStep(
     element: '.selector',
@@ -21,8 +39,11 @@ $tour->addStep(
     options: [],
 );
 ```
+</TabItem>
+</Tabs>
 
-`element` may be `null`, which produces a centered Step. `options` takes any key from the table below.
+In the builders, `element` may be `null`, which produces a centered Step; the component takes the host
+element it wraps as its target. `options` takes any key from the table below.
 
 ## Options
 
@@ -55,6 +76,8 @@ values. `data` is passed through untouched and reappears in the `detail` of
 
 ## Centered Step
 
+<Tabs>
+<TabItem label="Component">
 ```twig
 <twig:Driver:Step
     :order="1"
@@ -65,15 +88,44 @@ values. `data` is passed through untouched and reappears in the `detail` of
 ```
 
 The component renders a `<template>` host, so a centered Step adds no layout element to the page.
+</TabItem>
+
+<TabItem label="Twig builder">
+```twig
+{% set tour = tour.addStep(null, 'Welcome', 'Start with the big picture') %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
+```php
+$tour->addStep(null, 'Welcome', 'Start with the big picture');
+```
+</TabItem>
+</Tabs>
+
+A `null` element and `:centered="true"` produce the same serialized Step.
 
 ## Async targets
 
+<Tabs>
+<TabItem label="Twig builder">
+```twig
+{% set tour = tour.addStep('#late-panel', 'Panel', options: {
+    waitForElement: 2000,
+    skipMissingElement: true,
+}) %}
+```
+</TabItem>
+
+<TabItem label="PHP builder">
 ```php
 $tour->addStep('#late-panel', 'Panel', options: [
     'waitForElement' => 2000,
     'skipMissingElement' => true,
 ]);
 ```
+</TabItem>
+</Tabs>
 
 <Aside type="note" title="Async options need a selector">
 `waitForElement` and `skipMissingElement` only mean something for a Step addressed by selector. A

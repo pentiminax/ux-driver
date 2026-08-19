@@ -4,7 +4,7 @@
 [![PHP Version](https://img.shields.io/packagist/php-v/pentiminax/ux-driver?style=flat-square)](https://packagist.org/packages/pentiminax/ux-driver)
 [![Downloads total](https://img.shields.io/packagist/dt/pentiminax/ux-driver.svg?style=flat-square)](https://packagist.org/packages/pentiminax/ux-driver/stats)
 
-UX Driver integrates [Driver.js](https://driverjs.com/) with Symfony UX so you can build product Tours, Highlights, and Hints from Twig Components or PHP builders.
+UX Driver integrates [Driver.js](https://driverjs.com/) with Symfony UX so you can build product Tours, Highlights, and Hints three ways: Twig Components, the `create_tour()` Twig builder, or the autowired PHP builders.
 
 **Documentation:** <https://pentiminax.github.io/ux-driver/>
 
@@ -44,6 +44,32 @@ import 'driver.js/dist/hints.css'
     </twig:Driver:Step>
 </twig:Driver:Tour>
 ```
+
+## Same Tour in PHP
+
+```php
+use Pentiminax\UX\Driver\Builder\TourBuilder;
+
+public function __construct(private readonly TourBuilder $tourBuilder)
+{
+}
+
+public function dashboard(): Response
+{
+    $tour = $this->tourBuilder->create('welcome')
+        ->addStep('.dashboard-title', 'Dashboard', 'This is your daily overview')
+        ->once();
+
+    return $this->render('dashboard.html.twig', ['tour' => $tour]);
+}
+```
+
+```twig
+<button type="button" {{ ux_tour(tour) }} {{ ux_tour_action('start') }}>Start tour</button>
+```
+
+`TourBuilder` and `HintsBuilder` are autowired services. See
+[Authoring modes](https://pentiminax.github.io/ux-driver/guides/authoring-modes/).
 
 ## Minimal Hints
 
