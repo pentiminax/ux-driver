@@ -1,8 +1,3 @@
-<div {{ attributes.defaults({
-    'data-controller': 'pentiminax--ux-driver--hints',
-    'data-pentiminax--ux-driver--hints-id-value': id,
-    'data-pentiminax--ux-driver--hints-options-value': this.options()|json_encode,
-    'data-pentiminax--ux-driver--hints-autostart-value': autostart ? 'true' : 'false',
-}) }}>
+<div {{ attributes.defaults(this.stimulusAttributes()) }}>
     {% block content %}{% endblock %}
 </div>

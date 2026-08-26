@@ -1,11 +1,3 @@
-<{{ this.tagName }} {{ attributes.defaults({
-    'data-pentiminax--ux-driver--tour-target': 'step',
-    'data-step-order': order,
-    'data-step-side': this.sideValue,
-    'data-step-align': this.alignValue,
-}|merge(this.titleHtml is not null ? {'data-step-title': this.titleHtml} : {})
- |merge(this.descriptionHtml is not null ? {'data-step-description': this.descriptionHtml} : {})
- |merge(centered ? {'data-step-centered': 'true'} : {})
- |merge(this.configJson is not null ? {'data-step-config': this.configJson} : {})) }}>
+<{{ this.tagName }} {{ attributes.defaults(this.stimulusAttributes()) }}>
     {% block content %}{% endblock %}
 </{{ this.tagName }}>

@@ -7,6 +7,7 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
 use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
 
@@ -62,6 +63,25 @@ final class Tour
     public string|Markup|null $prevBtnText = null;
 
     public string|Markup|null $doneBtnText = null;
+
+    /**
+     * The attributes the tour controller reads, derived from StimulusContract so a value
+     * renamed on the JS side cannot keep rendering here.
+     *
+     * @return array<string, string>
+     *
+     * @throws \JsonException when an option cannot be serialized
+     * @throws \ValueError    when a button name or the overlay click behaviour is unknown
+     */
+    public function stimulusAttributes(): array
+    {
+        return StimulusContract::controllerAttributes(StimulusContract::TOUR, [
+            'id'        => $this->id,
+            'options'   => json_encode($this->options(), \JSON_THROW_ON_ERROR),
+            'autostart' => $this->autostart ? 'true' : 'false',
+            'once'      => $this->once ? 'true' : 'false',
+        ]);
+    }
 
     /**
      * @return array<string, mixed>
