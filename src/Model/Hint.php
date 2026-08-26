@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
+use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
@@ -28,8 +29,8 @@ final readonly class Hint
 {
     /** Keys nested under `beacon`: the dot driver.js paints next to the element. */
     public const BEACON_OPTIONS = [
-        'side'      => Options::SIDE,
-        'align'     => Options::ALIGN,
+        'side'      => Normalizer::Side,
+        'align'     => Normalizer::Align,
         'animate'   => null,
         'className' => null,
     ];

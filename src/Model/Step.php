@@ -6,6 +6,7 @@ namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
+use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
@@ -36,8 +37,8 @@ final readonly class Step
     private const SCHEMA = [
         'popover' => [
             'popoverClass'   => null,
-            'showButtons'    => Options::BUTTONS,
-            'disableButtons' => Options::BUTTONS,
+            'showButtons'    => Normalizer::Buttons,
+            'disableButtons' => Normalizer::Buttons,
             'showProgress'   => null,
             'progressText'   => null,
             'nextBtnText'    => null,

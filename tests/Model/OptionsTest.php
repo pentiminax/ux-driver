@@ -6,6 +6,7 @@ namespace Pentiminax\UX\Driver\Tests\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
+use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Model\Hint;
 use Pentiminax\UX\Driver\Model\Options;
@@ -26,7 +27,7 @@ use Twig\Markup;
 final class OptionsTest extends TestCase
 {
     private const STEP_SCHEMA = [
-        'popover' => ['popoverClass' => null, 'showButtons' => Options::BUTTONS],
+        'popover' => ['popoverClass' => null, 'showButtons' => Normalizer::Buttons],
         'step'    => ['waitForElement' => null],
     ];
 
@@ -71,7 +72,7 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @param array<string, array<string, string|array<string, string|null>|null>> $schema
+     * @param array<string, array<string, Normalizer|array<string, Normalizer|null>|null>> $schema
      */
     #[Test]
     #[DataProvider('schemas')]
@@ -84,7 +85,7 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, array<string, array<string, string|array<string, string|null>|null>>, string}>
+     * @return iterable<string, array{string, array<string, array<string, Normalizer|array<string, Normalizer|null>|null>>, string}>
      */
     public static function schemas(): iterable
     {

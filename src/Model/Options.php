@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Model;
 
-use Pentiminax\UX\Driver\Enum\Align;
-use Pentiminax\UX\Driver\Enum\Button;
-use Pentiminax\UX\Driver\Enum\Side;
+use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
 
@@ -19,17 +17,10 @@ use Twig\Markup;
  */
 final class Options
 {
-    /** Normalizers a table entry may ask for. A null entry passes the value through. */
-    public const BUTTONS = 'buttons';
-
-    public const SIDE = 'side';
-
-    public const ALIGN = 'align';
-
     /**
-     * @param array<string, mixed>                                                 $options
-     * @param array<string, array<string, string|array<string, string|null>|null>> $schema  bucket name => option name => normalizer, or a nested table for an option holding its own options
-     * @param string                                                               $subject the option kind named by the error message
+     * @param array<string, mixed>                                                         $options
+     * @param array<string, array<string, Normalizer|array<string, Normalizer|null>|null>> $schema  bucket name => option name => normalizer, or a nested table for an option holding its own options
+     * @param string                                                                       $subject the option kind named by the error message
      *
      * @return array<string, array<string, mixed>> one entry per bucket, in the schema order
      *
@@ -47,20 +38,7 @@ final class Options
                 throw new \InvalidArgumentException(\sprintf('Unknown %s option "%s". Serializable driver.js %s options are: %s.', $subject, $key, $subject, implode(', ', self::names($schema))));
             }
 
-            $normalizer = $schema[$bucket][$key];
-
-            if (!\is_array($normalizer)) {
-                $buckets[$bucket][$key] = self::normalize($normalizer, $value);
-
-                continue;
-            }
-
-            if (!\is_array($value)) {
-                throw new \InvalidArgumentException(\sprintf('Option "%s" expects an array of driver.js %s options, %s given.', $key, $key, get_debug_type($value)));
-            }
-
-            /* @var array<string, mixed> $value */
-            $buckets[$bucket][$key] = self::normalizeAll($value, $normalizer, $key);
+            $buckets[$bucket][$key] = self::normalizeAll([$key => $value], $schema[$bucket], $subject)[$key];
         }
 
         return $buckets;
@@ -69,8 +47,8 @@ final class Options
     /**
      * The flat variant: a single table, no bucketing.
      *
-     * @param array<string, mixed>       $options
-     * @param array<string, string|null> $table
+     * @param array<string, mixed>                                          $options
+     * @param array<string, Normalizer|array<string, Normalizer|null>|null> $table
      *
      * @return array<string, mixed>
      *
@@ -86,7 +64,20 @@ final class Options
                 throw new \InvalidArgumentException(\sprintf('Unknown %s option "%s". Serializable driver.js %s options are: %s.', $subject, $key, $subject, implode(', ', array_keys($table))));
             }
 
-            $normalized[$key] = self::normalize($table[$key], $value);
+            $normalizer = $table[$key];
+
+            if (!\is_array($normalizer)) {
+                $normalized[$key] = null === $normalizer ? $value : $normalizer->apply($value);
+
+                continue;
+            }
+
+            if (!\is_array($value)) {
+                throw new \InvalidArgumentException(\sprintf('Option "%s" expects an array of driver.js %s options, %s given.', $key, $key, get_debug_type($value)));
+            }
+
+            /* @var array<string, mixed> $value */
+            $normalized[$key] = self::normalizeAll($value, $normalizer, $key);
         }
 
         return $normalized;
@@ -117,7 +108,7 @@ final class Options
     }
 
     /**
-     * @param array<string, array<string, string|array<string, string|null>|null>> $schema
+     * @param array<string, array<string, Normalizer|array<string, Normalizer|null>|null>> $schema
      */
     private static function bucketOf(string $key, array $schema): ?string
     {
@@ -131,36 +122,12 @@ final class Options
     }
 
     /**
-     * @param array<string, array<string, string|array<string, string|null>|null>> $schema
+     * @param array<string, array<string, Normalizer|array<string, Normalizer|null>|null>> $schema
      *
      * @return list<string>
      */
     private static function names(array $schema): array
     {
         return array_merge(...array_map(array_keys(...), array_values($schema)));
-    }
-
-    private static function normalize(?string $normalizer, mixed $value): mixed
-    {
-        if (self::BUTTONS === $normalizer) {
-            /** @var iterable<Button|string> $buttons */
-            $buttons = is_iterable($value) ? $value : [$value];
-
-            return Button::normalizeAll($buttons);
-        }
-
-        if (self::SIDE === $normalizer) {
-            \assert(\is_string($value) || $value instanceof Side);
-
-            return Side::normalize($value);
-        }
-
-        if (self::ALIGN === $normalizer) {
-            \assert(\is_string($value) || $value instanceof Align);
-
-            return Align::normalize($value);
-        }
-
-        return $value;
     }
 }
