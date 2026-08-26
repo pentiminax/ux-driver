@@ -7,7 +7,7 @@ namespace Pentiminax\UX\Driver\Model;
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\Side;
-use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
 
 /**
@@ -31,18 +31,17 @@ final readonly class Step
 {
     /**
      * Keys nested under `popover` in the driver.js payload, mapped to how their value is
-     * normalized. The button labels and the progress text are written with innerHTML, like the
-     * title and the description, so they go through the same escaping.
+     * normalized. The ones reaching innerHTML are escaped by DriverOptions, not listed here.
      */
     private const POPOVER_OPTIONS = [
         'popoverClass'   => null,
         'showButtons'    => 'buttons',
         'disableButtons' => 'buttons',
         'showProgress'   => null,
-        'progressText'   => 'html',
-        'nextBtnText'    => 'html',
-        'prevBtnText'    => 'html',
-        'doneBtnText'    => 'html',
+        'progressText'   => null,
+        'nextBtnText'    => null,
+        'prevBtnText'    => null,
+        'doneBtnText'    => null,
     ];
 
     /** Keys living at the root of the driver.js step payload. */
@@ -101,7 +100,7 @@ final readonly class Step
             throw new \InvalidArgumentException(\sprintf('Unknown step option "%s". Serializable driver.js step options are: %s.', $key, implode(', ', [...array_keys(self::POPOVER_OPTIONS), ...self::STEP_OPTIONS])));
         }
 
-        $this->popoverOptions = $popover;
+        $this->popoverOptions = DriverOptions::escape($popover);
         $this->stepOptions    = $step;
     }
 
@@ -135,11 +134,12 @@ final readonly class Step
      */
     public function toArray(): array
     {
-        $popover = array_filter([
-            'title'       => PopoverContent::render($this->title),
-            'description' => PopoverContent::render($this->description),
-            'side'        => $this->side,
-            'align'       => $this->align,
+        $popover = array_filter(DriverOptions::escape([
+            'title'       => $this->title,
+            'description' => $this->description,
+        ]) + [
+            'side'  => $this->side,
+            'align' => $this->align,
         ], static fn ($v) => null !== $v) + $this->popoverOptions;
 
         // A centered step has no element: driver.js then places the popover in the middle of
@@ -171,12 +171,6 @@ final readonly class Step
             $buttons = is_iterable($value) ? $value : [$value];
 
             return Button::normalizeAll($buttons);
-        }
-
-        if ('html' === $kind) {
-            \assert(null === $value || \is_string($value) || $value instanceof Markup);
-
-            return PopoverContent::render($value);
         }
 
         return $value;

@@ -6,7 +6,7 @@ namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Side;
-use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
 
 /**
@@ -27,13 +27,13 @@ use Twig\Markup;
 final readonly class Hint
 {
     /**
-     * Keys nested under `popover` in the driver.js hint payload. The button label is written
-     * with innerHTML, like the title and the description, so it goes through the same escaping.
+     * Keys nested under `popover` in the driver.js hint payload. The ones reaching innerHTML
+     * are escaped by DriverOptions, not listed here.
      */
     private const POPOVER_OPTIONS = [
         'popoverClass' => null,
         'showButton'   => null,
-        'buttonText'   => 'html',
+        'buttonText'   => null,
     ];
 
     /** Keys nested under `beacon`: the dot driver.js paints next to the element. */
@@ -107,7 +107,7 @@ final readonly class Hint
             throw new \InvalidArgumentException(\sprintf('Unknown hint option "%s". Serializable driver.js hint options are: %s.', $key, implode(', ', [...array_keys(self::POPOVER_OPTIONS), 'beacon', ...self::HINT_OPTIONS])));
         }
 
-        $this->popoverOptions = $popover;
+        $this->popoverOptions = DriverOptions::escape($popover);
         $this->beaconOptions  = $beacon;
         $this->hintOptions    = $hint;
     }
@@ -137,11 +137,12 @@ final readonly class Hint
      */
     public function toArray(): array
     {
-        $popover = array_filter([
-            'title'       => PopoverContent::render($this->title),
-            'description' => PopoverContent::render($this->description),
-            'side'        => $this->side,
-            'align'       => $this->align,
+        $popover = array_filter(DriverOptions::escape([
+            'title'       => $this->title,
+            'description' => $this->description,
+        ]) + [
+            'side'  => $this->side,
+            'align' => $this->align,
         ], static fn ($v) => null !== $v) + $this->popoverOptions;
 
         return array_filter([
@@ -199,12 +200,6 @@ final readonly class Hint
             \assert(\is_string($value) || $value instanceof Align);
 
             return Align::normalize($value);
-        }
-
-        if ('html' === $kind) {
-            \assert(null === $value || \is_string($value) || $value instanceof Markup);
-
-            return PopoverContent::render($value);
         }
 
         return $value;
