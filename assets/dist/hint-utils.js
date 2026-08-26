@@ -1,8 +1,6 @@
+import { parseConfig, resolveDeclarative } from './config-utils.js';
 export function resolveHints(builderHints, hintTargets) {
-    if (builderHints.length > 0) {
-        return builderHints;
-    }
-    return hintTargets.map(declaredHint);
+    return resolveDeclarative(builderHints, hintTargets, declaredHint);
 }
 function declaredHint(element) {
     const config = parseConfig(element.dataset.hintConfig);
@@ -18,16 +16,5 @@ function declaredHint(element) {
             align: element.dataset.hintAlign,
         },
     };
-}
-function parseConfig(json) {
-    if (!json) {
-        return {};
-    }
-    try {
-        return JSON.parse(json);
-    }
-    catch {
-        return {};
-    }
 }
 //# sourceMappingURL=hint-utils.js.map

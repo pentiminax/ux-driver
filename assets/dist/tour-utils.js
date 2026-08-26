@@ -1,3 +1,4 @@
+import { parseConfig, resolveDeclarative } from './config-utils.js';
 export function storageKey(id) {
     return `ux-driver:seen:${id}`;
 }
@@ -30,13 +31,12 @@ export function forgetSeen(id) {
     }
 }
 export function resolveSteps(builderSteps, stepTargets) {
-    if (builderSteps.length > 0) {
-        return builderSteps;
-    }
+    return resolveDeclarative(builderSteps, sortedByOrder(stepTargets), declaredStep);
+}
+function sortedByOrder(stepTargets) {
     return stepTargets
         .slice()
-        .sort((left, right) => Number(left.dataset.stepOrder ?? 0) - Number(right.dataset.stepOrder ?? 0))
-        .map(declaredStep);
+        .sort((left, right) => Number(left.dataset.stepOrder ?? 0) - Number(right.dataset.stepOrder ?? 0));
 }
 function declaredStep(element) {
     const config = parseConfig(element.dataset.stepConfig);
@@ -54,16 +54,5 @@ function declaredStep(element) {
         step.element = element;
     }
     return step;
-}
-function parseConfig(json) {
-    if (!json) {
-        return {};
-    }
-    try {
-        return JSON.parse(json);
-    }
-    catch {
-        return {};
-    }
 }
 //# sourceMappingURL=tour-utils.js.map

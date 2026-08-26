@@ -17,14 +17,14 @@ use Twig\Markup;
  */
 final class Hints
 {
+    use OverlayOptions;
+
     /** @var Hint[] */
     private array $hints = [];
 
-    /** @var array<string, mixed> */
-    private array $options = [];
-
     public function __construct(public readonly string $id)
     {
+        $this->options = [];
     }
 
     /**
@@ -60,12 +60,12 @@ final class Hints
         ?bool $animate = null,
         ?string $className = null,
     ): self {
-        $this->options['beacon'] = array_filter([
-            'side'      => null === $side ? null : Side::normalize($side),
-            'align'     => null === $align ? null : Align::normalize($align),
+        $this->options['beacon'] = Options::normalizeAll(array_filter([
+            'side'      => $side,
+            'align'     => $align,
             'animate'   => $animate,
             'className' => $className,
-        ], static fn ($value) => null !== $value);
+        ], static fn ($value) => null !== $value), Hint::BEACON_OPTIONS, 'beacon');
 
         return $this;
     }
@@ -81,37 +81,9 @@ final class Hints
         return $this;
     }
 
-    public function popoverClass(string $class): self
-    {
-        $this->options['popoverClass'] = $class;
-
-        return $this;
-    }
-
-    public function popoverOffset(int $offset): self
-    {
-        $this->options['popoverOffset'] = $offset;
-
-        return $this;
-    }
-
     public function overlay(bool $value = true): self
     {
         $this->options['overlay'] = $value;
-
-        return $this;
-    }
-
-    public function overlayColor(string $color): self
-    {
-        $this->options['overlayColor'] = $color;
-
-        return $this;
-    }
-
-    public function overlayOpacity(float $opacity): self
-    {
-        $this->options['overlayOpacity'] = $opacity;
 
         return $this;
     }
