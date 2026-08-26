@@ -8,7 +8,7 @@ use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
 use Pentiminax\UX\Driver\Enum\Side;
-use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
 
 /**
@@ -180,32 +180,33 @@ final class Tour
 
     /**
      * driver.js substitutes `{{current}}` and `{{total}}` in the template, then writes it with
-     * innerHTML — hence the same escaping as the popover content.
+     * innerHTML — hence the same escaping as the popover content, applied by DriverOptions
+     * when the config is serialized.
      */
     public function progressText(string|Markup $template): self
     {
-        $this->options['progressText'] = PopoverContent::render($template);
+        $this->options['progressText'] = $template;
 
         return $this;
     }
 
     public function nextBtnText(string|Markup $text): self
     {
-        $this->options['nextBtnText'] = PopoverContent::render($text);
+        $this->options['nextBtnText'] = $text;
 
         return $this;
     }
 
     public function prevBtnText(string|Markup $text): self
     {
-        $this->options['prevBtnText'] = PopoverContent::render($text);
+        $this->options['prevBtnText'] = $text;
 
         return $this;
     }
 
     public function doneBtnText(string|Markup $text): self
     {
-        $this->options['doneBtnText'] = PopoverContent::render($text);
+        $this->options['doneBtnText'] = $text;
 
         return $this;
     }
@@ -230,7 +231,7 @@ final class Tour
      */
     public function getOptions(): array
     {
-        return $this->options;
+        return DriverOptions::escape($this->options);
     }
 
     public function isOnce(): bool

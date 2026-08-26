@@ -6,7 +6,7 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
-use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\Html\DriverOptions;
 use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
@@ -90,7 +90,7 @@ final class Tour
      */
     public function options(): array
     {
-        return array_filter([
+        return DriverOptions::escape(array_filter([
             'showProgress'             => $this->showProgress,
             'animate'                  => $this->animate,
             'smoothScroll'             => $this->smoothScroll,
@@ -108,11 +108,11 @@ final class Tour
             'popoverOffset'            => $this->popoverOffset,
             'showButtons'              => null === $this->showButtons ? null : Button::normalizeAll($this->showButtons),
             'disableButtons'           => null === $this->disableButtons ? null : Button::normalizeAll($this->disableButtons),
-            'progressText'             => PopoverContent::render($this->progressText),
-            'nextBtnText'              => PopoverContent::render($this->nextBtnText),
-            'prevBtnText'              => PopoverContent::render($this->prevBtnText),
-            'doneBtnText'              => PopoverContent::render($this->doneBtnText),
-        ], static fn ($value) => null !== $value);
+            'progressText'             => $this->progressText,
+            'nextBtnText'              => $this->nextBtnText,
+            'prevBtnText'              => $this->prevBtnText,
+            'doneBtnText'              => $this->doneBtnText,
+        ], static fn ($value) => null !== $value));
     }
 
     private function overlayClickBehaviorValue(): ?string
