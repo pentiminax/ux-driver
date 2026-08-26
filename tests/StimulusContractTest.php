@@ -45,7 +45,10 @@ final class StimulusContractTest extends TestCase
     ];
 
     /** Stimulus lifecycle callbacks: methods, but not actions. */
-    private const LIFECYCLE = ['initialize', 'connect', 'disconnect'];
+    private const LIFECYCLE = ['initialize', 'connect', 'disconnect', 'constructor'];
+
+    /** Member modifiers that mean "not an action", whatever the method is called. */
+    private const NOT_ACTIONS = ['private', 'protected', 'static', 'declare'];
 
     /**
      * @return iterable<string, array{string}>
@@ -65,7 +68,7 @@ final class StimulusContractTest extends TestCase
 
         self::assertSame(
             StimulusContract::VALUES[$identifier],
-            $this->captured('/^ {8}(\w+):/m', $block),
+            $this->topLevelKeys($block),
             \sprintf('StimulusContract::VALUES must list the `static values` of assets/src/%s.', self::CONTROLLER_SOURCES[$identifier]),
         );
     }
@@ -76,7 +79,7 @@ final class StimulusContractTest extends TestCase
     {
         self::assertSame(
             [StimulusContract::TARGETS[$identifier]],
-            $this->captured("/'(\w+)'/", $this->block($identifier, 'targets', '[', ']')),
+            $this->captured('/[\'"](\w+)[\'"]/', $this->block($identifier, 'targets', '[', ']')),
             \sprintf('StimulusContract::TARGETS must list the `static targets` of assets/src/%s.', self::CONTROLLER_SOURCES[$identifier]),
         );
     }
@@ -90,7 +93,7 @@ final class StimulusContractTest extends TestCase
     public function the_declared_actions_are_the_controller_methods(string $identifier): void
     {
         $methods = array_values(array_diff(
-            $this->captured('/^ {4}([a-zA-Z_]\w*)\(/m', $this->source(self::CONTROLLER_SOURCES[$identifier])),
+            $this->methods($this->source(self::CONTROLLER_SOURCES[$identifier])),
             self::LIFECYCLE,
         ));
 
@@ -123,6 +126,10 @@ final class StimulusContractTest extends TestCase
     /**
      * The builder mode does not go through the components: it hands its values straight to
      * StimulusHelper, so its keys are a copy of the contract too.
+     *
+     * A render path may leave a declared value out — a Highlight carries no global `options`,
+     * driver.js falls back to its defaults — so what matters is the other direction: nothing
+     * undeclared reaches the DOM, because that is the value the controller would ignore.
      */
     #[Test]
     public function the_builder_mode_renders_only_declared_values(): void
@@ -133,18 +140,9 @@ final class StimulusContractTest extends TestCase
             new HintsBuilder(),
         );
 
-        self::assertSame(
-            $this->sorted(StimulusContract::VALUES[StimulusContract::TOUR]),
-            $this->renderedValues(StimulusContract::TOUR, (string) $extension->renderTour(new Tour('onboarding'))),
-        );
-        self::assertSame(
-            $this->sorted(StimulusContract::VALUES[StimulusContract::TOUR]),
-            $this->renderedValues(StimulusContract::TOUR, (string) $extension->renderHighlight('.help', 'Aide')),
-        );
-        self::assertSame(
-            $this->sorted(StimulusContract::VALUES[StimulusContract::HINTS]),
-            $this->renderedValues(StimulusContract::HINTS, (string) $extension->renderHints(new Hints('help'))),
-        );
+        $this->assertRendersOnlyDeclaredValues(StimulusContract::TOUR, (string) $extension->renderTour(new Tour('onboarding')));
+        $this->assertRendersOnlyDeclaredValues(StimulusContract::TOUR, (string) $extension->renderHighlight('.help', 'Aide'));
+        $this->assertRendersOnlyDeclaredValues(StimulusContract::HINTS, (string) $extension->renderHints(new Hints('help')));
     }
 
     /**
@@ -170,6 +168,32 @@ final class StimulusContractTest extends TestCase
     }
 
     /**
+     * The attribute test reads `dataset.<name>` and nothing else. Destructuring or a computed
+     * key would leave an attribute unseen — and an unseen attribute is one this test would let
+     * go undeclared — so refuse to run blind instead.
+     */
+    #[Test]
+    #[DataProvider('identifiers')]
+    public function the_dataset_reads_are_all_visible_to_this_test(string $identifier): void
+    {
+        $file = self::DATASET_SOURCES[$identifier];
+
+        self::assertDoesNotMatchRegularExpression(
+            '/dataset\s*\[|[{\[][^{}\[\]]*[}\]]\s*=[^;]*\bdataset\b/',
+            $this->source($file),
+            \sprintf('assets/src/%s reads its dataset in a form this test cannot see: teach %s to parse it before shipping.', $file, self::class),
+        );
+    }
+
+    private function assertRendersOnlyDeclaredValues(string $identifier, string $markup): void
+    {
+        $rendered = $this->renderedValues($identifier, $markup);
+
+        self::assertNotSame([], $rendered, 'This render path emitted no Stimulus value at all.');
+        self::assertSame([], array_diff($rendered, StimulusContract::VALUES[$identifier]), \sprintf('Only the values declared by StimulusContract may reach the DOM; "%s" would be ignored by the controller.', implode('", "', array_diff($rendered, StimulusContract::VALUES[$identifier]))));
+    }
+
+    /**
      * @return list<string>
      */
     private function renderedValues(string $identifier, string $markup): array
@@ -190,6 +214,53 @@ final class StimulusContractTest extends TestCase
         }
 
         return $matches[1];
+    }
+
+    /**
+     * The keys of an object literal, at its top level only: nested groups are pruned first, so
+     * the result does not depend on how the controller happens to be indented.
+     *
+     * @return list<string>
+     */
+    private function topLevelKeys(string $block): array
+    {
+        do {
+            $block = (string) preg_replace('/\{[^{}\[\]()]*\}|\[[^{}\[\]()]*\]|\([^{}\[\]()]*\)/', '', $block, -1, $pruned);
+        } while ($pruned > 0);
+
+        return $this->captured('/(\w+)\s*:/', $block);
+    }
+
+    /**
+     * The public methods of the controller class. The class-body indentation is read from the
+     * `static targets` line rather than assumed, so reformatting the file moves both together
+     * instead of emptying the list; matching at that one depth is also what keeps `if (`, `for (`
+     * and the calls inside a method body out of the result.
+     *
+     * @return list<string>
+     */
+    private function methods(string $source): array
+    {
+        if (1 !== preg_match('/^([ \t]+)static\s+targets\b/m', $source, $indent)) {
+            self::fail('No indented `static targets` declaration to read the class-body indentation from.');
+        }
+
+        preg_match_all(
+            \sprintf('/^%s((?:public|protected|private|static|readonly|async|declare|get|set)\s+)*([a-zA-Z_]\w*)\s*\(/m', preg_quote($indent[1], '/')),
+            $source,
+            $matches,
+            \PREG_SET_ORDER,
+        );
+
+        $methods = [];
+
+        foreach ($matches as $match) {
+            if ([] === array_intersect(self::NOT_ACTIONS, preg_split('/\s+/', trim($match[1])) ?: [])) {
+                $methods[] = $match[2];
+            }
+        }
+
+        return array_values(array_unique($methods));
     }
 
     /**
