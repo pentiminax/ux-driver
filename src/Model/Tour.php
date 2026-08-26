@@ -93,7 +93,7 @@ final class Tour
      * @param array<string, mixed> $options
      *
      * @throws \InvalidArgumentException when an option is not a global driver.js option
-     * @throws \ValueError               when a button or the overlay click behaviour is unknown
+     * @throws \ValueError               when a button or the overlay click behavior is unknown
      */
     public function options(array $options): self
     {
