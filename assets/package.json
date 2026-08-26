@@ -2,7 +2,7 @@
   "name": "@pentiminax/ux-driver",
   "description": "driver.js integration for Symfony",
   "license": "MIT",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "dist/controller.js",
   "symfony": {
