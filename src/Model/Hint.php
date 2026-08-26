@@ -26,26 +26,29 @@ use Twig\Markup;
  */
 final readonly class Hint
 {
-    /**
-     * Keys nested under `popover` in the driver.js hint payload. The ones reaching innerHTML
-     * are escaped by DriverOptions, not listed here.
-     */
-    private const POPOVER_OPTIONS = [
-        'popoverClass' => null,
-        'showButton'   => null,
-        'buttonText'   => null,
-    ];
-
     /** Keys nested under `beacon`: the dot driver.js paints next to the element. */
-    private const BEACON_OPTIONS = [
-        'side'      => 'side',
-        'align'     => 'align',
+    public const BEACON_OPTIONS = [
+        'side'      => Options::SIDE,
+        'align'     => Options::ALIGN,
         'animate'   => null,
         'className' => null,
     ];
 
-    /** Keys living at the root of the driver.js hint payload. */
-    private const HINT_OPTIONS = ['data'];
+    /**
+     * Where each option lands in the driver.js hint payload, and how its value is normalized.
+     * The ones reaching innerHTML are escaped by DriverOptions, not listed here.
+     */
+    private const SCHEMA = [
+        'popover' => [
+            'popoverClass' => null,
+            'showButton'   => null,
+            'buttonText'   => null,
+        ],
+        'hint' => [
+            'beacon' => self::BEACON_OPTIONS,
+            'data'   => null,
+        ],
+    ];
 
     private string $side;
 
@@ -81,31 +84,11 @@ final readonly class Hint
         $this->side  = Side::normalize($side);
         $this->align = Align::normalize($align);
 
-        $popover = [];
-        $hint    = [];
-        $beacon  = [];
+        ['popover' => $popover, 'hint' => $hint] = Options::split($options, self::SCHEMA, 'hint');
 
-        foreach ($options as $key => $value) {
-            if (\array_key_exists($key, self::POPOVER_OPTIONS)) {
-                $popover[$key] = self::normalizeOption(self::POPOVER_OPTIONS[$key], $value);
-
-                continue;
-            }
-
-            if ('beacon' === $key) {
-                $beacon = self::normalizeBeacon($value);
-
-                continue;
-            }
-
-            if (\in_array($key, self::HINT_OPTIONS, true)) {
-                $hint[$key] = $value;
-
-                continue;
-            }
-
-            throw new \InvalidArgumentException(\sprintf('Unknown hint option "%s". Serializable driver.js hint options are: %s.', $key, implode(', ', [...array_keys(self::POPOVER_OPTIONS), 'beacon', ...self::HINT_OPTIONS])));
-        }
+        /** @var array<string, mixed> $beacon */
+        $beacon = $hint['beacon'] ?? [];
+        unset($hint['beacon']);
 
         $this->popoverOptions = DriverOptions::escape($popover);
         $this->beaconOptions  = $beacon;
@@ -137,19 +120,11 @@ final readonly class Hint
      */
     public function toArray(): array
     {
-        $popover = array_filter(DriverOptions::escape([
-            'title'       => $this->title,
-            'description' => $this->description,
-        ]) + [
-            'side'  => $this->side,
-            'align' => $this->align,
-        ], static fn ($v) => null !== $v) + $this->popoverOptions;
-
         return array_filter([
             'element' => $this->element,
             'id'      => $this->id,
             'beacon'  => [] === $this->beaconOptions ? null : $this->beaconOptions,
-            'popover' => $popover,
+            'popover' => Options::popover($this->title, $this->description, $this->side, $this->align, $this->popoverOptions),
         ], static fn ($v) => null !== $v) + $this->hintOptions;
     }
 
@@ -166,42 +141,5 @@ final readonly class Hint
             'beacon'  => [] === $this->beaconOptions ? null : $this->beaconOptions,
             'popover' => [] === $this->popoverOptions ? null : $this->popoverOptions,
         ], static fn ($v) => null !== $v) + $this->hintOptions;
-    }
-
-    /**
-     * @param array<string, mixed> $beacon
-     *
-     * @return array<string, mixed>
-     */
-    private static function normalizeBeacon(array $beacon): array
-    {
-        $normalized = [];
-
-        foreach ($beacon as $key => $value) {
-            if (!\array_key_exists($key, self::BEACON_OPTIONS)) {
-                throw new \InvalidArgumentException(\sprintf('Unknown beacon option "%s". driver.js beacon options are: %s.', $key, implode(', ', array_keys(self::BEACON_OPTIONS))));
-            }
-
-            $normalized[$key] = self::normalizeOption(self::BEACON_OPTIONS[$key], $value);
-        }
-
-        return $normalized;
-    }
-
-    private static function normalizeOption(?string $kind, mixed $value): mixed
-    {
-        if ('side' === $kind) {
-            \assert(\is_string($value) || $value instanceof Side);
-
-            return Side::normalize($value);
-        }
-
-        if ('align' === $kind) {
-            \assert(\is_string($value) || $value instanceof Align);
-
-            return Align::normalize($value);
-        }
-
-        return $value;
     }
 }

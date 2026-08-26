@@ -1,4 +1,5 @@
 import type {Alignment, DriveStep, Side} from 'driver.js';
+import {parseConfig, resolveDeclarative} from './config-utils.js';
 
 export function storageKey(id: string): string {
     return `ux-driver:seen:${id}`;
@@ -44,17 +45,16 @@ export function forgetSeen(id: string): void {
 }
 
 export function resolveSteps(builderSteps: DriveStep[], stepTargets: HTMLElement[]): DriveStep[] {
-    if (builderSteps.length > 0) {
-        return builderSteps;
-    }
+    return resolveDeclarative(builderSteps, sortedByOrder(stepTargets), declaredStep);
+}
 
+function sortedByOrder(stepTargets: HTMLElement[]): HTMLElement[] {
     return stepTargets
         .slice()
         .sort(
             (left, right) =>
                 Number(left.dataset.stepOrder ?? 0) - Number(right.dataset.stepOrder ?? 0),
-        )
-        .map(declaredStep);
+        );
 }
 
 /**
@@ -62,7 +62,7 @@ export function resolveSteps(builderSteps: DriveStep[], stepTargets: HTMLElement
  * element and the escaped popover content travel as their own attributes.
  */
 function declaredStep(element: HTMLElement): DriveStep {
-    const config = parseConfig(element.dataset.stepConfig);
+    const config = parseConfig<DriveStep>(element.dataset.stepConfig);
 
     const step: DriveStep = {
         ...config,
@@ -82,18 +82,4 @@ function declaredStep(element: HTMLElement): DriveStep {
     }
 
     return step;
-}
-
-function parseConfig(json: string | undefined): DriveStep {
-    if (!json) {
-        return {};
-    }
-
-    try {
-        return JSON.parse(json) as DriveStep;
-    } catch {
-        // A malformed payload would otherwise take the whole tour down; the step still plays
-        // with the options that do travel as attributes.
-        return {};
-    }
 }

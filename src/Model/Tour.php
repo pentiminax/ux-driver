@@ -16,16 +16,23 @@ use Twig\Markup;
  */
 final class Tour
 {
+    use OverlayOptions;
+
+    /**
+     * The one place a driver.js default is pinned: every authoring mode seeds its config here.
+     *
+     * @var array<string, mixed>
+     */
+    private const DEFAULTS = ['showProgress' => true];
+
     /** @var Step[] */
     private array $steps = [];
-
-    /** @var array<string, mixed> */
-    private array $options = ['showProgress' => true];
 
     private bool $once = false;
 
     public function __construct(public readonly string $id)
     {
+        $this->options = self::DEFAULTS;
     }
 
     /**
@@ -72,20 +79,6 @@ final class Tour
     public function allowClose(bool $value = true): self
     {
         $this->options['allowClose'] = $value;
-
-        return $this;
-    }
-
-    public function overlayColor(string $color): self
-    {
-        $this->options['overlayColor'] = $color;
-
-        return $this;
-    }
-
-    public function overlayOpacity(float $opacity): self
-    {
-        $this->options['overlayOpacity'] = $opacity;
 
         return $this;
     }
@@ -140,20 +133,6 @@ final class Tour
     public function disableActiveInteraction(bool $value = true): self
     {
         $this->options['disableActiveInteraction'] = $value;
-
-        return $this;
-    }
-
-    public function popoverClass(string $class): self
-    {
-        $this->options['popoverClass'] = $class;
-
-        return $this;
-    }
-
-    public function popoverOffset(int $offset): self
-    {
-        $this->options['popoverOffset'] = $offset;
 
         return $this;
     }

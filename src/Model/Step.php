@@ -30,27 +30,27 @@ use Twig\Markup;
 final readonly class Step
 {
     /**
-     * Keys nested under `popover` in the driver.js payload, mapped to how their value is
-     * normalized. The ones reaching innerHTML are escaped by DriverOptions, not listed here.
+     * Where each option lands in the driver.js step payload, and how its value is normalized.
+     * The ones reaching innerHTML are escaped by DriverOptions, not listed here.
      */
-    private const POPOVER_OPTIONS = [
-        'popoverClass'   => null,
-        'showButtons'    => 'buttons',
-        'disableButtons' => 'buttons',
-        'showProgress'   => null,
-        'progressText'   => null,
-        'nextBtnText'    => null,
-        'prevBtnText'    => null,
-        'doneBtnText'    => null,
-    ];
-
-    /** Keys living at the root of the driver.js step payload. */
-    private const STEP_OPTIONS = [
-        'disableActiveInteraction',
-        'advanceOnClick',
-        'skipMissingElement',
-        'waitForElement',
-        'data',
+    private const SCHEMA = [
+        'popover' => [
+            'popoverClass'   => null,
+            'showButtons'    => Options::BUTTONS,
+            'disableButtons' => Options::BUTTONS,
+            'showProgress'   => null,
+            'progressText'   => null,
+            'nextBtnText'    => null,
+            'prevBtnText'    => null,
+            'doneBtnText'    => null,
+        ],
+        'step' => [
+            'disableActiveInteraction' => null,
+            'advanceOnClick'           => null,
+            'skipMissingElement'       => null,
+            'waitForElement'           => null,
+            'data'                     => null,
+        ],
     ];
 
     private string $side;
@@ -81,24 +81,7 @@ final readonly class Step
         $this->side  = Side::normalize($side);
         $this->align = Align::normalize($align);
 
-        $popover = [];
-        $step    = [];
-
-        foreach ($options as $key => $value) {
-            if (\array_key_exists($key, self::POPOVER_OPTIONS)) {
-                $popover[$key] = self::normalizeOption(self::POPOVER_OPTIONS[$key], $value);
-
-                continue;
-            }
-
-            if (\in_array($key, self::STEP_OPTIONS, true)) {
-                $step[$key] = $value;
-
-                continue;
-            }
-
-            throw new \InvalidArgumentException(\sprintf('Unknown step option "%s". Serializable driver.js step options are: %s.', $key, implode(', ', [...array_keys(self::POPOVER_OPTIONS), ...self::STEP_OPTIONS])));
-        }
+        ['popover' => $popover, 'step' => $step] = Options::split($options, self::SCHEMA, 'step');
 
         $this->popoverOptions = DriverOptions::escape($popover);
         $this->stepOptions    = $step;
@@ -134,19 +117,11 @@ final readonly class Step
      */
     public function toArray(): array
     {
-        $popover = array_filter(DriverOptions::escape([
-            'title'       => $this->title,
-            'description' => $this->description,
-        ]) + [
-            'side'  => $this->side,
-            'align' => $this->align,
-        ], static fn ($v) => null !== $v) + $this->popoverOptions;
-
         // A centered step has no element: driver.js then places the popover in the middle of
         // the screen instead of anchoring it.
         return array_filter([
             'element' => $this->element,
-            'popover' => $popover,
+            'popover' => Options::popover($this->title, $this->description, $this->side, $this->align, $this->popoverOptions),
         ], static fn ($v) => null !== $v) + $this->stepOptions;
     }
 
@@ -162,17 +137,5 @@ final readonly class Step
         return array_filter([
             'popover' => [] === $this->popoverOptions ? null : $this->popoverOptions,
         ], static fn ($v) => null !== $v) + $this->stepOptions;
-    }
-
-    private static function normalizeOption(?string $kind, mixed $value): mixed
-    {
-        if ('buttons' === $kind) {
-            /** @var iterable<Button|string> $buttons */
-            $buttons = is_iterable($value) ? $value : [$value];
-
-            return Button::normalizeAll($buttons);
-        }
-
-        return $value;
     }
 }
