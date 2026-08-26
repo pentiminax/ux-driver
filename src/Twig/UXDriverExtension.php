@@ -9,6 +9,7 @@ use Pentiminax\UX\Driver\Builder\TourBuilder;
 use Pentiminax\UX\Driver\Model\Hints;
 use Pentiminax\UX\Driver\Model\Step;
 use Pentiminax\UX\Driver\Model\Tour;
+use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\StimulusBundle\Helper\StimulusHelper;
 use Twig\Extension\AbstractExtension;
 use Twig\Markup;
@@ -19,12 +20,6 @@ use Twig\TwigFunction;
  */
 final class UXDriverExtension extends AbstractExtension
 {
-    /** @var list<string> */
-    private const TOUR_ACTIONS = ['start', 'highlight', 'next', 'previous', 'moveTo', 'refresh', 'destroy'];
-
-    /** @var list<string> */
-    private const HINTS_ACTIONS = ['show', 'hide', 'open', 'close', 'dismiss', 'restore', 'restoreAll', 'refresh'];
-
     public function __construct(
         private readonly StimulusHelper $stimulus,
         private readonly TourBuilder $tourBuilder,
@@ -63,7 +58,7 @@ final class UXDriverExtension extends AbstractExtension
             'hints'     => $hints->getHints(),
             'options'   => $hints->getOptions(),
             'autostart' => $autostart,
-        ], '@pentiminax/ux-driver/hints');
+        ], StimulusContract::HINTS);
     }
 
     public function renderTour(Tour $tour): Markup
@@ -119,7 +114,7 @@ final class UXDriverExtension extends AbstractExtension
      */
     public function renderTourAction(string $action, array $params = []): Markup
     {
-        return $this->renderAction('@pentiminax/ux-driver/tour', $action, self::TOUR_ACTIONS, $params, 'tour');
+        return $this->renderAction(StimulusContract::TOUR, $action, $params, 'tour');
     }
 
     /**
@@ -129,34 +124,35 @@ final class UXDriverExtension extends AbstractExtension
      */
     public function renderHintsAction(string $action, array $params = []): Markup
     {
-        return $this->renderAction('@pentiminax/ux-driver/hints', $action, self::HINTS_ACTIONS, $params, 'hints');
+        return $this->renderAction(StimulusContract::HINTS, $action, $params, 'hints');
     }
 
     /**
      * @param array<string, mixed> $values
      */
-    private function renderControllerAttributes(array $values, string $controller = '@pentiminax/ux-driver/tour'): Markup
+    private function renderControllerAttributes(array $values, string $identifier = StimulusContract::TOUR): Markup
     {
         $stimulusAttributes = $this->stimulus->createStimulusAttributes();
-        $stimulusAttributes->addController($controller, $values);
+        $stimulusAttributes->addController(StimulusContract::CONTROLLERS[$identifier], $values);
 
         return new Markup((string) $stimulusAttributes, 'UTF-8');
     }
 
     /**
-     * @param list<string>         $allowed
      * @param array<string, mixed> $params
      *
-     * @throws \InvalidArgumentException when the action is not in $allowed
+     * @throws \InvalidArgumentException when the action is not declared by the controller
      */
-    private function renderAction(string $controller, string $action, array $allowed, array $params, string $kind): Markup
+    private function renderAction(string $identifier, string $action, array $params, string $kind): Markup
     {
+        $allowed = StimulusContract::ACTIONS[$identifier];
+
         if (!\in_array($action, $allowed, true)) {
             throw new \InvalidArgumentException(\sprintf('Unknown %s action "%s". Allowed actions are: %s.', $kind, $action, implode(', ', $allowed)));
         }
 
         $stimulusAttributes = $this->stimulus->createStimulusAttributes();
-        $stimulusAttributes->addAction($controller, $action, parameters: $params);
+        $stimulusAttributes->addAction(StimulusContract::CONTROLLERS[$identifier], $action, parameters: $params);
 
         return new Markup((string) $stimulusAttributes, 'UTF-8');
     }

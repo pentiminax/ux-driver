@@ -6,6 +6,7 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Html\PopoverContent;
 use Pentiminax\UX\Driver\Model\Hint as HintModel;
+use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
 
@@ -39,6 +40,28 @@ final class Hint
 
     /** @var array<string, mixed>|null */
     public ?array $data = null;
+
+    /**
+     * The target declaration and the `data-hint-*` attributes the hints controller reads back
+     * through `dataset`, derived from StimulusContract so an attribute renamed on the JS side
+     * cannot keep rendering here.
+     *
+     * @return array<string, string>
+     *
+     * @throws \InvalidArgumentException when an option is not a serializable driver.js hint option
+     * @throws \ValueError               when a side or an alignment is unknown
+     */
+    public function stimulusAttributes(): array
+    {
+        return StimulusContract::targetAttributes(StimulusContract::HINTS, [
+            'side'        => $this->sideValue(),
+            'align'       => $this->alignValue(),
+            'id'          => $this->hintId,
+            'title'       => $this->titleHtml(),
+            'description' => $this->descriptionHtml(),
+            'config'      => $this->configJson(),
+        ]);
+    }
 
     /**
      * The template must render these, not the raw properties: the controller decodes the

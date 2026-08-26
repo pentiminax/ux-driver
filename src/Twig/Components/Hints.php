@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Model\Hints as HintsModel;
+use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
 
@@ -30,6 +31,24 @@ final class Hints
     public ?string $overlayColor = null;
 
     public ?float $overlayOpacity = null;
+
+    /**
+     * The attributes the hints controller reads, derived from StimulusContract so a value
+     * renamed on the JS side cannot keep rendering here.
+     *
+     * @return array<string, string>
+     *
+     * @throws \JsonException when an option cannot be serialized
+     * @throws \ValueError    when a beacon side or alignment is unknown
+     */
+    public function stimulusAttributes(): array
+    {
+        return StimulusContract::controllerAttributes(StimulusContract::HINTS, [
+            'id'        => $this->id,
+            'options'   => json_encode($this->options(), \JSON_THROW_ON_ERROR),
+            'autostart' => $this->autostart ? 'true' : 'false',
+        ]);
+    }
 
     /**
      * Serialized through the very model the builder mode uses, so both modes validate and

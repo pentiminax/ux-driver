@@ -1,10 +1,3 @@
-<{{ tag }} {{ attributes.defaults({
-    'data-pentiminax--ux-driver--hints-target': 'hint',
-    'data-hint-side': this.sideValue,
-    'data-hint-align': this.alignValue,
-}|merge(hintId is not null ? {'data-hint-id': hintId} : {})
- |merge(this.titleHtml is not null ? {'data-hint-title': this.titleHtml} : {})
- |merge(this.descriptionHtml is not null ? {'data-hint-description': this.descriptionHtml} : {})
- |merge(this.configJson is not null ? {'data-hint-config': this.configJson} : {})) }}>
+<{{ tag }} {{ attributes.defaults(this.stimulusAttributes()) }}>
     {% block content %}{% endblock %}
 </{{ tag }}>

@@ -7,6 +7,7 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Html\PopoverContent;
 use Pentiminax\UX\Driver\Model\Step as StepModel;
+use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
 
@@ -64,6 +65,28 @@ final class Step
     public function tagName(): string
     {
         return $this->centered ? 'template' : $this->tag;
+    }
+
+    /**
+     * The target declaration and the `data-step-*` attributes the tour controller reads back
+     * through `dataset`, derived from StimulusContract so an attribute renamed on the JS side
+     * cannot keep rendering here.
+     *
+     * @return array<string, string>
+     *
+     * @throws \ValueError when a side, an alignment or a button name is unknown
+     */
+    public function stimulusAttributes(): array
+    {
+        return StimulusContract::targetAttributes(StimulusContract::TOUR, [
+            'order'       => (string) $this->order,
+            'side'        => $this->sideValue(),
+            'align'       => $this->alignValue(),
+            'title'       => $this->titleHtml(),
+            'description' => $this->descriptionHtml(),
+            'centered'    => $this->centered ? 'true' : null,
+            'config'      => $this->configJson(),
+        ]);
     }
 
     /**
