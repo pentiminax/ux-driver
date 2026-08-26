@@ -14,6 +14,9 @@ use Twig\Extension\AbstractExtension;
 use Twig\Markup;
 use Twig\TwigFunction;
 
+/**
+ * @phpstan-import-type StepOptions from Step
+ */
 final class UXDriverExtension extends AbstractExtension
 {
     /** @var list<string> */
@@ -75,7 +78,13 @@ final class UXDriverExtension extends AbstractExtension
     }
 
     /**
-     * @param array<string, mixed> $options
+     * A Highlight is a one-Step Tour: `$options` are the step's own options, serialized through
+     * the Step model so they land in the step payload instead of the global driver.js config.
+     *
+     * @param StepOptions $options
+     *
+     * @throws \InvalidArgumentException when an option is not a serializable driver.js step option
+     * @throws \ValueError               when a button, side or alignment value is unknown
      */
     public function renderHighlight(
         string $element,
@@ -85,12 +94,11 @@ final class UXDriverExtension extends AbstractExtension
         string $align = 'start',
         array $options = [],
     ): Markup {
-        $step = new Step($element, $title, $description, $side, $align);
+        $step = new Step($element, $title, $description, $side, $align, $options);
 
         return $this->renderControllerAttributes([
             'id'        => 'highlight-'.md5($element.$title),
             'steps'     => [$step->toArray()],
-            'options'   => $options,
             'once'      => false,
             'autostart' => false,
         ]);

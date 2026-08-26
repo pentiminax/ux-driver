@@ -6,7 +6,7 @@ namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Side;
-use Pentiminax\UX\Driver\Html\PopoverContent;
+use Pentiminax\UX\Driver\Html\DriverOptions;
 use Twig\Markup;
 
 /**
@@ -72,11 +72,11 @@ final class Hints
 
     /**
      * driver.js writes the button label with innerHTML, hence the same escaping as the popover
-     * content.
+     * content, applied by DriverOptions when the config is serialized.
      */
     public function buttonText(string|Markup $text): self
     {
-        $this->options['buttonText'] = PopoverContent::render($text);
+        $this->options['buttonText'] = $text;
 
         return $this;
     }
@@ -129,6 +129,6 @@ final class Hints
      */
     public function getOptions(): array
     {
-        return $this->options;
+        return DriverOptions::escape($this->options);
     }
 }

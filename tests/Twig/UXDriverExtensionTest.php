@@ -49,6 +49,47 @@ final class UXDriverExtensionTest extends TestCase
     }
 
     #[Test]
+    public function it_serializes_highlight_options_as_step_options(): void
+    {
+        $markup = (string) $this->extension()->renderHighlight(
+            '.help-button',
+            'Aide',
+            options: [
+                'doneBtnText'    => '<script>alert(1)</script>',
+                'popoverClass'   => 'help-popover',
+                'advanceOnClick' => true,
+            ],
+        );
+
+        $steps = $this->stepsValue($markup);
+
+        // Step-level options belong to the step payload, not to the global driver.js config.
+        $this->assertSame([
+            [
+                'element' => '.help-button',
+                'popover' => [
+                    'title'        => 'Aide',
+                    'side'         => 'bottom',
+                    'align'        => 'start',
+                    'doneBtnText'  => '&lt;script&gt;alert(1)&lt;/script&gt;',
+                    'popoverClass' => 'help-popover',
+                ],
+                'advanceOnClick' => true,
+            ],
+        ], $steps);
+        $this->assertStringNotContainsString('-options-value', $markup);
+    }
+
+    #[Test]
+    public function it_rejects_an_unknown_highlight_option(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown step option "animate"');
+
+        $this->extension()->renderHighlight('.help-button', 'Aide', options: ['animate' => false]);
+    }
+
+    #[Test]
     public function it_creates_tours_from_the_builder_factory(): void
     {
         $tour = $this->extension()->createTour('dashboard');
@@ -130,6 +171,22 @@ final class UXDriverExtensionTest extends TestCase
         $this->expectExceptionMessage('Unknown hints action "pause"');
 
         $this->extension()->renderHintsAction('pause');
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function stepsValue(string $markup): array
+    {
+        preg_match('/steps-value="([^"]*)"/', $markup, $matches);
+        $encoded = $matches[1] ?? null;
+
+        $this->assertIsString($encoded);
+
+        /** @var list<array<string, mixed>> $steps */
+        $steps = json_decode(html_entity_decode($encoded, \ENT_QUOTES, 'UTF-8'), true, 512, \JSON_THROW_ON_ERROR);
+
+        return $steps;
     }
 
     private function extension(): UXDriverExtension
