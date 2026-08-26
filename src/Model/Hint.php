@@ -8,6 +8,7 @@ use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\DriverOptions;
+use Pentiminax\UX\Driver\Html\PopoverContent;
 use Twig\Markup;
 
 /**
@@ -65,7 +66,8 @@ final readonly class Hint
     private array $hintOptions;
 
     /**
-     * @param string      $element a CSS selector
+     * @param string|null $element a CSS selector, or null when the element is the DOM node
+     *                             carrying the hint — what the declarative mode does
      * @param string|null $id      a stable identifier for `open()`, `dismiss()` and `restore()`;
      *                             driver.js falls back to the hint index when it is omitted
      * @param HintOptions $options
@@ -74,7 +76,7 @@ final readonly class Hint
      * @throws \ValueError               when a side or alignment value is unknown
      */
     public function __construct(
-        private string $element,
+        private ?string $element = null,
         private ?string $id = null,
         private string|Markup|null $title = null,
         private string|Markup|null $description = null,
@@ -96,7 +98,7 @@ final readonly class Hint
         $this->hintOptions    = $hint;
     }
 
-    public function getElement(): string
+    public function getElement(): ?string
     {
         return $this->element;
     }
@@ -104,6 +106,21 @@ final readonly class Hint
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    /**
+     * The escaped popover content the declarative mode renders as its own `data-hint-*`
+     * attribute: the controller decodes it once through `dataset` before driver.js hands it to
+     * innerHTML. The builder mode gets the same treatment through toArray().
+     */
+    public function titleHtml(): ?string
+    {
+        return PopoverContent::render($this->title);
+    }
+
+    public function descriptionHtml(): ?string
+    {
+        return PopoverContent::render($this->description);
     }
 
     public function getSide(): string

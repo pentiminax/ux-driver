@@ -20,6 +20,8 @@ enum Normalizer
 
     case Align;
 
+    case OverlayClick;
+
     /**
      * @throws \ValueError when the value is not one this normalizer accepts
      */
@@ -38,8 +40,14 @@ enum Normalizer
             return Side::normalize($value);
         }
 
-        \assert(\is_string($value) || $value instanceof Align);
+        if (self::Align === $this) {
+            \assert(\is_string($value) || $value instanceof Align);
 
-        return Align::normalize($value);
+            return Align::normalize($value);
+        }
+
+        \assert(\is_string($value) || $value instanceof OverlayClickBehavior);
+
+        return ($value instanceof OverlayClickBehavior ? $value : OverlayClickBehavior::from($value))->value;
     }
 }

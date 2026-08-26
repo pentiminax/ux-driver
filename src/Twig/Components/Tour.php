@@ -6,7 +6,7 @@ namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
-use Pentiminax\UX\Driver\Html\DriverOptions;
+use Pentiminax\UX\Driver\Model\Tour as TourModel;
 use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Twig\Markup;
@@ -20,13 +20,13 @@ final class Tour
 
     public bool $once = false;
 
-    public bool $showProgress = true;
+    public ?bool $showProgress = null;
 
-    public bool $animate = true;
+    public ?bool $animate = null;
 
-    public bool $smoothScroll = false;
+    public ?bool $smoothScroll = null;
 
-    public bool $allowClose = true;
+    public ?bool $allowClose = null;
 
     public ?string $overlayColor = null;
 
@@ -84,13 +84,18 @@ final class Tour
     }
 
     /**
+     * The global driver.js config, serialized through the very model the builder mode uses:
+     * one place validates the options and one place pins the defaults, so a bare component and
+     * a bare builder send the same payload.
+     *
      * @return array<string, mixed>
      *
-     * @throws \ValueError when a button name or the overlay click behaviour is unknown
+     * @throws \InvalidArgumentException when an option is not a global driver.js option
+     * @throws \ValueError               when a button name or the overlay click behaviour is unknown
      */
     public function options(): array
     {
-        return DriverOptions::escape(array_filter([
+        return (new TourModel($this->id))->options(array_filter([
             'showProgress'             => $this->showProgress,
             'animate'                  => $this->animate,
             'smoothScroll'             => $this->smoothScroll,
@@ -100,29 +105,18 @@ final class Tour
             'stagePadding'             => $this->stagePadding,
             'duration'                 => $this->duration,
             'allowScroll'              => $this->allowScroll,
-            'overlayClickBehavior'     => $this->overlayClickBehaviorValue(),
+            'overlayClickBehavior'     => $this->overlayClickBehavior,
             'stageRadius'              => $this->stageRadius,
             'allowKeyboardControl'     => $this->allowKeyboardControl,
             'disableActiveInteraction' => $this->disableActiveInteraction,
             'popoverClass'             => $this->popoverClass,
             'popoverOffset'            => $this->popoverOffset,
-            'showButtons'              => null === $this->showButtons ? null : Button::normalizeAll($this->showButtons),
-            'disableButtons'           => null === $this->disableButtons ? null : Button::normalizeAll($this->disableButtons),
+            'showButtons'              => $this->showButtons,
+            'disableButtons'           => $this->disableButtons,
             'progressText'             => $this->progressText,
             'nextBtnText'              => $this->nextBtnText,
             'prevBtnText'              => $this->prevBtnText,
             'doneBtnText'              => $this->doneBtnText,
-        ], static fn ($value) => null !== $value));
-    }
-
-    private function overlayClickBehaviorValue(): ?string
-    {
-        if (null === $this->overlayClickBehavior) {
-            return null;
-        }
-
-        return ($this->overlayClickBehavior instanceof OverlayClickBehavior
-            ? $this->overlayClickBehavior
-            : OverlayClickBehavior::from($this->overlayClickBehavior))->value;
+        ], static fn ($value) => null !== $value))->getOptions();
     }
 }

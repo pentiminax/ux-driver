@@ -38,7 +38,7 @@ final class ComponentRenderingTest extends KernelTestCase
         $this->assertStringContainsString('data-pentiminax--ux-driver--tour-autostart-value="true"', $markup);
         $this->assertStringContainsString('data-pentiminax--ux-driver--tour-once-value="true"', $markup);
         $this->assertStringContainsString(
-            'data-pentiminax--ux-driver--tour-options-value="{"showProgress":true,"animate":true,"smoothScroll":false,"allowClose":true,"overlayColor":"#111111","stagePadding":12}"',
+            'data-pentiminax--ux-driver--tour-options-value="{"showProgress":true,"overlayColor":"#111111","stagePadding":12}"',
             html_entity_decode($markup, \ENT_QUOTES),
         );
     }
@@ -51,7 +51,7 @@ final class ComponentRenderingTest extends KernelTestCase
         $this->assertStringContainsString('data-pentiminax--ux-driver--tour-autostart-value="false"', $markup);
         $this->assertStringContainsString('data-pentiminax--ux-driver--tour-once-value="false"', $markup);
         $this->assertStringContainsString(
-            'data-pentiminax--ux-driver--tour-options-value="{"showProgress":true,"animate":true,"smoothScroll":false,"allowClose":true}"',
+            'data-pentiminax--ux-driver--tour-options-value="{"showProgress":true}"',
             html_entity_decode($markup, \ENT_QUOTES),
         );
     }

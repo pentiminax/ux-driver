@@ -6,6 +6,7 @@ namespace Pentiminax\UX\Driver\Model;
 
 use Pentiminax\UX\Driver\Enum\Align;
 use Pentiminax\UX\Driver\Enum\Button;
+use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\OverlayClickBehavior;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\DriverOptions;
@@ -19,11 +20,41 @@ final class Tour
     use OverlayOptions;
 
     /**
-     * The one place a driver.js default is pinned: every authoring mode seeds its config here.
+     * The one place a driver.js default is pinned: every authoring mode seeds its config here,
+     * so a component and a builder that were configured the same way serialize the same
+     * payload. Everything else is left out and driver.js falls back to its own defaults.
      *
      * @var array<string, mixed>
      */
     private const DEFAULTS = ['showProgress' => true];
+
+    /**
+     * The global driver.js options, in payload order, mapped to how their value is normalized.
+     * The setters and the declarative mode both write through this table.
+     */
+    private const OPTIONS = [
+        'showProgress'             => null,
+        'animate'                  => null,
+        'smoothScroll'             => null,
+        'allowClose'               => null,
+        'overlayColor'             => null,
+        'overlayOpacity'           => null,
+        'stagePadding'             => null,
+        'duration'                 => null,
+        'allowScroll'              => null,
+        'overlayClickBehavior'     => Normalizer::OverlayClick,
+        'stageRadius'              => null,
+        'allowKeyboardControl'     => null,
+        'disableActiveInteraction' => null,
+        'popoverClass'             => null,
+        'popoverOffset'            => null,
+        'showButtons'              => Normalizer::Buttons,
+        'disableButtons'           => Normalizer::Buttons,
+        'progressText'             => null,
+        'nextBtnText'              => null,
+        'prevBtnText'              => null,
+        'doneBtnText'              => null,
+    ];
 
     /** @var Step[] */
     private array $steps = [];
@@ -51,6 +82,22 @@ final class Tour
         array $options = [],
     ): self {
         $this->steps[] = new Step($element, $title, $description, $side, $align, $options);
+
+        return $this;
+    }
+
+    /**
+     * Applies a map of driver.js options at once — what the Twig component hands over, so the
+     * declarative mode validates and normalizes exactly like the builder.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @throws \InvalidArgumentException when an option is not a global driver.js option
+     * @throws \ValueError               when a button or the overlay click behaviour is unknown
+     */
+    public function options(array $options): self
+    {
+        $this->options = array_merge($this->options, Options::normalizeAll($options, self::OPTIONS, 'tour'));
 
         return $this;
     }
@@ -109,11 +156,7 @@ final class Tour
      */
     public function overlayClickBehavior(OverlayClickBehavior|string $behavior): self
     {
-        $this->options['overlayClickBehavior'] = ($behavior instanceof OverlayClickBehavior
-            ? $behavior
-            : OverlayClickBehavior::from($behavior))->value;
-
-        return $this;
+        return $this->options(['overlayClickBehavior' => $behavior]);
     }
 
     public function stageRadius(int $radius): self
@@ -142,9 +185,7 @@ final class Tour
      */
     public function showButtons(Button|string ...$buttons): self
     {
-        $this->options['showButtons'] = Button::normalizeAll($buttons);
-
-        return $this;
+        return $this->options(['showButtons' => $buttons]);
     }
 
     /**
@@ -152,9 +193,7 @@ final class Tour
      */
     public function disableButtons(Button|string ...$buttons): self
     {
-        $this->options['disableButtons'] = Button::normalizeAll($buttons);
-
-        return $this;
+        return $this->options(['disableButtons' => $buttons]);
     }
 
     /**

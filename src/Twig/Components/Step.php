@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Pentiminax\UX\Driver\Twig\Components;
 
 use Pentiminax\UX\Driver\Enum\Button;
-use Pentiminax\UX\Driver\Html\PopoverContent;
 use Pentiminax\UX\Driver\Model\Step as StepModel;
 use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
@@ -72,63 +71,36 @@ final class Step
      * through `dataset`, derived from StimulusContract so an attribute renamed on the JS side
      * cannot keep rendering here.
      *
+     * Everything but the order and the centered flag comes from the model the builder mode
+     * uses, so both modes validate, escape and shape their payload identically.
+     *
      * @return array<string, string>
      *
-     * @throws \ValueError when a side, an alignment or a button name is unknown
+     * @throws \InvalidArgumentException when an option is not a serializable driver.js step option
+     * @throws \ValueError               when a side, an alignment or a button name is unknown
      */
     public function stimulusAttributes(): array
     {
+        $step = $this->model();
+
         return StimulusContract::targetAttributes(StimulusContract::TOUR, [
             'order'       => (string) $this->order,
-            'side'        => $this->sideValue(),
-            'align'       => $this->alignValue(),
-            'title'       => $this->titleHtml(),
-            'description' => $this->descriptionHtml(),
+            'side'        => $step->getSide(),
+            'align'       => $step->getAlign(),
+            'title'       => $step->titleHtml(),
+            'description' => $step->descriptionHtml(),
             'centered'    => $this->centered ? 'true' : null,
-            'config'      => $this->configJson(),
+            'config'      => $this->configJson($step),
         ]);
     }
 
     /**
-     * The template must render these, not the raw properties: the controller decodes the
-     * attribute once through `dataset` before handing it to innerHTML.
-     */
-    public function titleHtml(): ?string
-    {
-        return PopoverContent::render($this->title);
-    }
-
-    public function descriptionHtml(): ?string
-    {
-        return PopoverContent::render($this->description);
-    }
-
-    /**
-     * @throws \ValueError when the side is unknown
-     */
-    public function sideValue(): string
-    {
-        return $this->model()->getSide();
-    }
-
-    /**
-     * @throws \ValueError when the alignment is unknown
-     */
-    public function alignValue(): string
-    {
-        return $this->model()->getAlign();
-    }
-
-    /**
      * The remaining driver.js step options, already nested the way the controller hands them
-     * to driver.js. Serialized through the very model the builder mode uses, so both modes
-     * validate and shape their payload identically.
-     *
-     * @throws \ValueError when a button name is unknown
+     * to driver.js.
      */
-    public function configJson(): ?string
+    private function configJson(StepModel $step): ?string
     {
-        $extras = $this->model()->extras();
+        $extras = $step->extras();
 
         return [] === $extras ? null : json_encode($extras, \JSON_THROW_ON_ERROR);
     }
@@ -136,6 +108,8 @@ final class Step
     private function model(): StepModel
     {
         return new StepModel(
+            title: $this->title,
+            description: $this->description,
             side: $this->side,
             align: $this->align,
             options: $this->options(),

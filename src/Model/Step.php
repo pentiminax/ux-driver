@@ -9,6 +9,7 @@ use Pentiminax\UX\Driver\Enum\Button;
 use Pentiminax\UX\Driver\Enum\Normalizer;
 use Pentiminax\UX\Driver\Enum\Side;
 use Pentiminax\UX\Driver\Html\DriverOptions;
+use Pentiminax\UX\Driver\Html\PopoverContent;
 use Twig\Markup;
 
 /**
@@ -101,6 +102,21 @@ final readonly class Step
     public function getDescription(): string|Markup|null
     {
         return $this->description;
+    }
+
+    /**
+     * The escaped popover content the declarative mode renders as its own `data-step-*`
+     * attribute: the controller decodes it once through `dataset` before driver.js hands it to
+     * innerHTML. The builder mode gets the same treatment through toArray().
+     */
+    public function titleHtml(): ?string
+    {
+        return PopoverContent::render($this->title);
+    }
+
+    public function descriptionHtml(): ?string
+    {
+        return PopoverContent::render($this->description);
     }
 
     public function getSide(): string

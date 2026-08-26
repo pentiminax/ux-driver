@@ -56,48 +56,19 @@ final class Hints
      *
      * @return array<string, mixed>
      *
-     * @throws \ValueError when a beacon side or alignment is unknown
+     * @throws \InvalidArgumentException when an option is not a group-wide driver.js option
+     * @throws \ValueError               when a beacon side or alignment is unknown
      */
     public function options(): array
     {
-        $hints = new HintsModel($this->id);
-
-        if (null !== $this->beacon) {
-            /** @var array{side?: string, align?: string, animate?: bool, className?: string} $beacon */
-            $beacon = $this->beacon;
-
-            $hints->beacon(
-                side: $beacon['side']           ?? null,
-                align: $beacon['align']         ?? null,
-                animate: $beacon['animate']     ?? null,
-                className: $beacon['className'] ?? null,
-            );
-        }
-
-        if (null !== $this->buttonText) {
-            $hints->buttonText($this->buttonText);
-        }
-
-        if (null !== $this->popoverClass) {
-            $hints->popoverClass($this->popoverClass);
-        }
-
-        if (null !== $this->popoverOffset) {
-            $hints->popoverOffset($this->popoverOffset);
-        }
-
-        if (null !== $this->overlay) {
-            $hints->overlay($this->overlay);
-        }
-
-        if (null !== $this->overlayColor) {
-            $hints->overlayColor($this->overlayColor);
-        }
-
-        if (null !== $this->overlayOpacity) {
-            $hints->overlayOpacity($this->overlayOpacity);
-        }
-
-        return $hints->getOptions();
+        return (new HintsModel($this->id))->options(array_filter([
+            'beacon'         => $this->beacon,
+            'buttonText'     => $this->buttonText,
+            'popoverClass'   => $this->popoverClass,
+            'popoverOffset'  => $this->popoverOffset,
+            'overlay'        => $this->overlay,
+            'overlayColor'   => $this->overlayColor,
+            'overlayOpacity' => $this->overlayOpacity,
+        ], static fn ($value) => null !== $value))->getOptions();
     }
 }
