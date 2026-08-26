@@ -19,6 +19,20 @@ final class Hints
 {
     use OverlayOptions;
 
+    /**
+     * The group-wide driver.js options, in payload order, mapped to how their value is
+     * normalized. The setters and the declarative mode both write through this table.
+     */
+    private const OPTIONS = [
+        'beacon'         => Hint::BEACON_OPTIONS,
+        'buttonText'     => null,
+        'popoverClass'   => null,
+        'popoverOffset'  => null,
+        'overlay'        => null,
+        'overlayColor'   => null,
+        'overlayOpacity' => null,
+    ];
+
     /** @var Hint[] */
     private array $hints = [];
 
@@ -50,6 +64,22 @@ final class Hints
     }
 
     /**
+     * Applies a map of driver.js options at once — what the Twig component hands over, so the
+     * declarative mode validates and normalizes exactly like the builder.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @throws \InvalidArgumentException when an option is not a group-wide driver.js option
+     * @throws \ValueError               when a beacon side or alignment is unknown
+     */
+    public function options(array $options): self
+    {
+        $this->options = array_merge($this->options, Options::normalizeAll($options, self::OPTIONS, 'hints'));
+
+        return $this;
+    }
+
+    /**
      * The default beacon for every hint of the group.
      *
      * @throws \ValueError when the side or the alignment is unknown
@@ -60,14 +90,12 @@ final class Hints
         ?bool $animate = null,
         ?string $className = null,
     ): self {
-        $this->options['beacon'] = Options::normalizeAll(array_filter([
+        return $this->options(['beacon' => array_filter([
             'side'      => $side,
             'align'     => $align,
             'animate'   => $animate,
             'className' => $className,
-        ], static fn ($value) => null !== $value), Hint::BEACON_OPTIONS, 'beacon');
-
-        return $this;
+        ], static fn ($value) => null !== $value)]);
     }
 
     /**

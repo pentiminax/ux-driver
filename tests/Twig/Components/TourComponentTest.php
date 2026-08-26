@@ -30,9 +30,7 @@ final class TourComponentTest extends TestCase
 
         $this->assertSame([
             'showProgress' => true,
-            'animate'      => true,
             'smoothScroll' => true,
-            'allowClose'   => true,
             'overlayColor' => '#111111',
         ], $component->options());
     }
@@ -63,10 +61,7 @@ final class TourComponentTest extends TestCase
         $component->doneBtnText              = 'Terminer';
 
         $builder = (new TourModel('onboarding'))
-            ->showProgress()
             ->animate(false)
-            ->smoothScroll(false)
-            ->allowClose()
             ->duration(150)
             ->allowScroll()
             ->overlayClickBehavior(OverlayClickBehavior::NextStep)
@@ -85,10 +80,24 @@ final class TourComponentTest extends TestCase
         $this->assertSame($builder->getOptions(), $component->options());
     }
 
+    /**
+     * The defaults live in the model alone: a component nobody configured must send exactly
+     * what an untouched builder sends, with no compensating call on either side.
+     */
+    #[Test]
+    public function a_bare_component_serializes_like_a_bare_builder(): void
+    {
+        $component     = new Tour();
+        $component->id = 'onboarding';
+
+        $this->assertSame((new TourModel('onboarding'))->getOptions(), $component->options());
+    }
+
     #[Test]
     public function it_rejects_an_unknown_button_name(): void
     {
         $component              = new Tour();
+        $component->id          = 'onboarding';
         $component->showButtons = ['finish'];
 
         $this->expectException(\ValueError::class);
@@ -100,6 +109,7 @@ final class TourComponentTest extends TestCase
     public function it_rejects_an_unknown_overlay_click_behavior(): void
     {
         $component                       = new Tour();
+        $component->id                   = 'onboarding';
         $component->overlayClickBehavior = 'previousStep';
 
         $this->expectException(\ValueError::class);

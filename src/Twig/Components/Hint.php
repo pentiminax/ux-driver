@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pentiminax\UX\Driver\Twig\Components;
 
-use Pentiminax\UX\Driver\Html\PopoverContent;
 use Pentiminax\UX\Driver\Model\Hint as HintModel;
 use Pentiminax\UX\Driver\StimulusContract;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
@@ -46,6 +45,10 @@ final class Hint
      * through `dataset`, derived from StimulusContract so an attribute renamed on the JS side
      * cannot keep rendering here.
      *
+     * Everything comes from the model the builder mode uses, so both modes validate, escape and
+     * shape their payload identically. The model carries no element: in the declarative mode the
+     * hint is the DOM node itself, which the controller supplies.
+     *
      * @return array<string, string>
      *
      * @throws \InvalidArgumentException when an option is not a serializable driver.js hint option
@@ -53,55 +56,25 @@ final class Hint
      */
     public function stimulusAttributes(): array
     {
+        $hint = $this->model();
+
         return StimulusContract::targetAttributes(StimulusContract::HINTS, [
-            'side'        => $this->sideValue(),
-            'align'       => $this->alignValue(),
-            'id'          => $this->hintId,
-            'title'       => $this->titleHtml(),
-            'description' => $this->descriptionHtml(),
-            'config'      => $this->configJson(),
+            'side'        => $hint->getSide(),
+            'align'       => $hint->getAlign(),
+            'id'          => $hint->getId(),
+            'title'       => $hint->titleHtml(),
+            'description' => $hint->descriptionHtml(),
+            'config'      => $this->configJson($hint),
         ]);
-    }
-
-    /**
-     * The template must render these, not the raw properties: the controller decodes the
-     * attribute once through `dataset` before handing it to innerHTML.
-     */
-    public function titleHtml(): ?string
-    {
-        return PopoverContent::render($this->title);
-    }
-
-    public function descriptionHtml(): ?string
-    {
-        return PopoverContent::render($this->description);
-    }
-
-    /**
-     * @throws \ValueError when the side is unknown
-     */
-    public function sideValue(): string
-    {
-        return $this->model()->getSide();
-    }
-
-    /**
-     * @throws \ValueError when the alignment is unknown
-     */
-    public function alignValue(): string
-    {
-        return $this->model()->getAlign();
     }
 
     /**
      * The remaining driver.js hint options, already nested the way the controller hands them to
      * driver.js.
-     *
-     * @throws \InvalidArgumentException when an option is not a serializable driver.js hint option
      */
-    public function configJson(): ?string
+    private function configJson(HintModel $hint): ?string
     {
-        $extras = $this->model()->extras();
+        $extras = $hint->extras();
 
         return [] === $extras ? null : json_encode($extras, \JSON_THROW_ON_ERROR);
     }
@@ -109,7 +82,9 @@ final class Hint
     private function model(): HintModel
     {
         return new HintModel(
-            element: '',
+            id: $this->hintId,
+            title: $this->title,
+            description: $this->description,
             side: $this->side,
             align: $this->align,
             options: $this->options(),
